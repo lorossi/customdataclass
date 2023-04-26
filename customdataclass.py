@@ -6,6 +6,7 @@ It does work kinda good.
 from __future__ import annotations
 
 import builtins
+import importlib
 from typing import Any
 
 
@@ -16,9 +17,10 @@ class Dataclass:
     and I wanted to have a better control over the attributes.
     """
 
-    _frozen = False
-    _frozen_after_init = True
-    _enforce_types = True
+    _frozen: bool = False
+    _frozen_after_init: bool = True
+    _enforce_types: bool = True
+    _serializer = None
 
     def __init__(self, **kwargs) -> Dataclass:
         """Create a new Dataclass.
@@ -132,6 +134,10 @@ class Dataclass:
             AttributeError: _description_
             AttributeError: _description_
         """
+        if key == "_serializer":
+            super().__setattr__(key, value)
+            return
+
         if self._frozen:
             raise AttributeError(
                 f"Can't set {key}. {self.__class__.__name__} is immutable."
@@ -259,6 +265,33 @@ class Dataclass:
         """
         return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
 
+    def importDecorator(f, *_, **__) -> None:
+        """Import the type of the attribute."""
+        libs = {
+            "json": "json",
+            "yaml": "PyYAML",
+            "toml": "toml",
+        }
+        serializer = None
+
+        for k, v in libs.items():
+            if k in f.__name__:
+                serializer = importlib.import_module(k)
+                break
+
+        if serializer is None:
+            raise ImportError(
+                "Could not import the correct serializer for the function "
+                f"{f.__name__}."
+                f" Please install the required library {v}."
+            )
+
+        def wrapper(self: Dataclass, *args, **kwargs):
+            self._serializer = serializer
+            return f(self, *args, **kwargs)
+
+        return wrapper
+
     @property
     def to_dict(self) -> dict:
         """Return a dictionary with all the attributes of the object.
@@ -294,6 +327,7 @@ class Dataclass:
         return d
 
     @property
+    @importDecorator
     def to_json(self) -> str:
         """
         Return a json representation of the object. \
@@ -310,56 +344,37 @@ class Dataclass:
             if isinstance(v, (set, tuple)):
                 dict_data[k] = list(v)
 
-        try:
-            import ujson
-        except ImportError:
-            import json as ujson
-
-        return ujson.dumps(dict_data)
+        return self._serializer.dumps(dict_data)
 
     @property
+    @importDecorator
     def to_toml(self) -> str:
         """Return a toml representation of the object.
 
         Returns:
             str
         """
-        try:
-            import toml
-        except ImportError:
-            raise ImportError(
-                "toml is not installed. Install it with command pip install toml."
-            )
-        return toml.dumps(self.to_dict)
+        return self._serializer.dumps(self.to_dict)
 
     @property
+    @importDecorator
     def to_json_pretty(self) -> str:
         """Return a pretty json representation of the object.
 
         Returns:
             str
         """
-        try:
-            import ujson
-        except ImportError:
-            import json as ujson
-
-        return ujson.dumps(self.to_dict, indent=4, sort_keys=True)
+        return self._serializer.dumps(self.to_dict, indent=4, sort_keys=True)
 
     @property
+    @importDecorator
     def to_yaml(self) -> str:
         """Return a yaml representation of the object.
 
         Returns:
             str
         """
-        try:
-            import yaml
-        except ImportError:
-            raise ImportError(
-                "yaml is not installed. Install it with command pip install pyyaml."
-            )
-        return yaml.dump(self.to_dict)
+        return self._serializer.dump(self.to_dict)
 
     @property
     def attributes(self) -> list:
@@ -371,6 +386,7 @@ class Dataclass:
         return list(self.__class_attributes__.keys())
 
     @classmethod
+    @importDecorator
     def from_json(cls, json_string: str):
         """Create an object from a json string.
 
@@ -380,14 +396,10 @@ class Dataclass:
         Returns:
             object
         """
-        try:
-            import ujson
-        except ImportError:
-            import json as ujson
-
-        return cls(**ujson.loads(json_string))
+        return cls(**cls._serializer.loads(json_string))
 
     @classmethod
+    @importDecorator
     def from_toml(cls, toml_string: str):
         """Create an object from a toml string.
 
@@ -397,15 +409,10 @@ class Dataclass:
         Returns:
             object
         """
-        try:
-            import toml
-        except ImportError:
-            raise ImportError(
-                "toml is not installed. Install it with command pip install toml."
-            )
-        return cls(**toml.loads(toml_string))
+        return cls(**cls._serializer.loads(toml_string))
 
     @classmethod
+    @importDecorator
     def from_yaml(cls, yaml_string: str):
         """Create an object from a yaml string.
 
@@ -415,13 +422,9 @@ class Dataclass:
         Returns:
             object
         """
-        try:
-            import yaml
-        except ImportError:
-            raise ImportError(
-                "yaml is not installed. Install it with command pip install pyyaml."
-            )
-        return cls(**yaml.load(yaml_string, Loader=yaml.FullLoader))
+        return cls(
+            **cls._serializer.load(yaml_string, Loader=cls._serializer.FullLoader)
+        )
 
     @classmethod
     def from_dict(cls, d: dict):
