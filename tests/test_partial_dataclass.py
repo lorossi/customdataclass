@@ -70,3 +70,34 @@ class TestPartialDataclass(unittest.TestCase):
         p2.bool_var = True
 
         self.assertEqual(p1, p2)
+
+    def testEqualityMissingAttributes(self):
+        p1 = PartialMutableDataclass(int_var=1)
+        p2 = PartialMutableDataclass(float_var=1.0)
+        self.assertNotEqual(p1, p2)
+        p2.float_var = None
+        p2.int_var = 1
+        self.assertEqual(p1, p2)
+
+    def testRepr(self):
+        p = PartialMutableDataclass(int_var=1, float_var=1.0, str_var="1")
+
+        self.assertEqual(
+            repr(p),
+            'PartialMutableDataclass(int_var=1, float_var=1.0, str_var="1")',
+        )
+
+        p.bool_var = True
+
+        self.assertEqual(
+            repr(p),
+            'PartialMutableDataclass(int_var=1, float_var=1.0, str_var="1", '
+            "bool_var=True)",
+        )
+
+        p.bool_var = None
+
+        self.assertEqual(
+            repr(p),
+            'PartialMutableDataclass(int_var=1, float_var=1.0, str_var="1")',
+        )

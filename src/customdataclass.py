@@ -116,7 +116,6 @@ class Dataclass:
         Args:
             kwargs (dict): kwargs to check
         """
-        ...
         for k in self.__class_attributes__:
             if k not in kwargs:
                 kwargs[k] = self.__getattribute__(k)
@@ -251,6 +250,8 @@ class Dataclass:
         s = f"{self.__class__.__name__}("
 
         for k, v in self.__clean_dict__.items():
+            if self._partial and v is None:
+                continue
             s += f"{k}="
             if isinstance(v, str):
                 s += f'"{v}"'
