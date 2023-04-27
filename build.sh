@@ -29,10 +29,12 @@ coverage json -o $jsonreport > /dev/null 2>&1
 echo -e "\033[1;32mJSON file generated in $jsonreport\033[0m"
 # build the documentation
 cd src
-dpdoc --html -o ../$docsfolder customdataclass.py > /dev/null 2>&1
+pdoc --html -o ../$docsfolder customdataclass.py > /dev/null 2>&1
 echo -e "\033[1;32mDocumentation generated in $docsfolder\033[0m"
+# rename the file
+mv ../$docsfolder/customdataclass.html ../$docsfolder/index.html
 # return to the root folder
 cd ..
 # build the package and get the last word as the package name
 python3 -m build -o $buildsfolder > /dev/null 2>&1
-echo -e "\033[1;32m$buildsfolder\033[0m"
+echo -e "\033[1;Builds saved in $buildsfolder\033[0m"
