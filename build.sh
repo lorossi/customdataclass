@@ -14,18 +14,25 @@ else
     echo -e "\033[1;32mTests passed. Continuing.\033[0m"
 fi
 
+reportfolder="coverage"
+docsfolder="docs"
+jsonreport="coverage.json"
+buildsfolder="dist"
+
 # compute the coverage and pipe all output to /dev/null
-python3 -m unittest discover -s ./tests -p "test*.py" -q > /dev/null 2>&1
-echo -e "\033[1;32mCoverage computed and saved in .coverage.\033[0m"
-# generate the report and get the last word as the folder name
-reportfolder=$(coverage html | rev | cut -f1 -d ' ' | rev)
+coverage run -d $reportfolder -m unittest discover -s ./tests -p "test*.py" -q > /dev/null 2>&1
+echo -e "\033[1;32mCoverage computed and saved in $reportfolder\033[0m"
+coverage html -d $reportfolder > /dev/null 2>&1
 echo -e "\033[1;32mCoverage report generated in $reportfolder\033[0m"
+# generate the coverage as a json file
+coverage json -o $jsonreport > /dev/null 2>&1
+echo -e "\033[1;32mJSON file generated in $jsonreport\033[0m"
 # build the documentation
-cd src > /dev/null 2>&1
-docsfolder=$(pdoc --html -o ../docs customdataclass.py --force | rev | cut -f2 -d '/' | rev)
+cd src
+dpdoc --html -o ../$docsfolder customdataclass.py > /dev/null 2>&1
 echo -e "\033[1;32mDocumentation generated in $docsfolder\033[0m"
 # return to the root folder
-cd .. > /dev/null 2>&1
+cd ..
 # build the package and get the last word as the package name
-builds=$(python3 -m build | tail -n 1)
-echo -e "\033[1;32m$builds\033[0m"
+python3 -m build -o $buildsfolder > /dev/null 2>&1
+echo -e "\033[1;32m$buildsfolder\033[0m"
