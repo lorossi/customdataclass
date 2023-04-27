@@ -429,6 +429,15 @@ class Dataclass:
         return self._serializer.dumps(dict_data)
 
     @property
+    def to_json_pretty(self) -> str:
+        """Return a pretty json representation of the object.
+
+        Returns:
+            str
+        """
+        return self._serializer.dumps(self._serializer.loads(self.to_json), indent=4)
+
+    @property
     @_importDecorator
     def to_toml(self) -> str:
         """Return a toml representation of the object.
@@ -437,16 +446,6 @@ class Dataclass:
             str
         """
         return self._serializer.dumps(self.to_dict)
-
-    @property
-    @_importDecorator
-    def to_json_pretty(self) -> str:
-        """Return a pretty json representation of the object.
-
-        Returns:
-            str
-        """
-        return self._serializer.dumps(self.to_dict, indent=4, sort_keys=True)
 
     @property
     @_importDecorator
