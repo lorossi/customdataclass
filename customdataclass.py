@@ -334,12 +334,25 @@ class Dataclass:
         """
         return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
 
-    def importDecorator(f, *_, **__) -> None:
-        """Import the type of the attribute."""
+    def _importDecorator(f, *_, **__) -> None:
+        """Import the correct serializer for the function.
+
+        The serializer will be put in the `_serializer` attribute of the object.
+        It's mandatory to have all the functions decorated with this decorator \
+        to contain the name of the serializer in their name.
+
+        Unittest will require all the serializers to be installed.
+
+        Args:
+            f (function): function to decorate
+
+        Raises:
+            ImportError: Could not import the correct serializer
+        """
         libs = {
-            "json": "json",
-            "yaml": "PyYAML",
-            "toml": "toml",
+            "json": "json",  # could be ujson but json is in the stdlib
+            "yaml": "PyYAML",  # not in the stdlib
+            "toml": "toml",  # not in the stdlib
         }
         serializer = None
 
@@ -396,7 +409,7 @@ class Dataclass:
         return d
 
     @property
-    @importDecorator
+    @_importDecorator
     def to_json(self) -> str:
         """
         Return a json representation of the object. \
@@ -416,7 +429,7 @@ class Dataclass:
         return self._serializer.dumps(dict_data)
 
     @property
-    @importDecorator
+    @_importDecorator
     def to_toml(self) -> str:
         """Return a toml representation of the object.
 
@@ -426,7 +439,7 @@ class Dataclass:
         return self._serializer.dumps(self.to_dict)
 
     @property
-    @importDecorator
+    @_importDecorator
     def to_json_pretty(self) -> str:
         """Return a pretty json representation of the object.
 
@@ -436,7 +449,7 @@ class Dataclass:
         return self._serializer.dumps(self.to_dict, indent=4, sort_keys=True)
 
     @property
-    @importDecorator
+    @_importDecorator
     def to_yaml(self) -> str:
         """Return a yaml representation of the object.
 
@@ -455,7 +468,7 @@ class Dataclass:
         return list(self.__class_attributes__.keys())
 
     @classmethod
-    @importDecorator
+    @_importDecorator
     def from_json(cls, json_string: str):
         """Create an object from a json string.
 
@@ -469,7 +482,7 @@ class Dataclass:
         return cls(**cls._serializer.loads(json_string))
 
     @classmethod
-    @importDecorator
+    @_importDecorator
     def from_toml(cls, toml_string: str):
         """Create an object from a toml string.
 
@@ -483,7 +496,7 @@ class Dataclass:
         return cls(**cls._serializer.loads(toml_string))
 
     @classmethod
-    @importDecorator
+    @_importDecorator
     def from_yaml(cls, yaml_string: str):
         """Create an object from a yaml string.
 
