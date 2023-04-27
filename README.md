@@ -67,9 +67,9 @@ If you're using VScode, you can also use the `Run Tests` command from the `Pytho
 
 To compute the coverage, simply run the following commands from the root folder of the project:
 
--`coverage run -m unittest discover -s ./tests -p "test*.py"`
--`coverage report -m` to see the report in the terminal
--`coverage html` to see format the report in HTML and see it in the browser
+- `coverage run -m unittest discover -s ./tests -p "test*.py"`
+- `coverage report -m` to see the report in the terminal
+- `coverage html` to see format the report in HTML and see it in the browser
 
 ## Documentation
 
