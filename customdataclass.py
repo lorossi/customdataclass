@@ -43,7 +43,11 @@ class Dataclass:
             if k not in kwargs:
                 raise AttributeError(f"Missing {k} in kwargs")
 
-            if self._enforce_types:
+            if v is None:
+                # no type has been specified
+                self.__class__.__annotations__[k] = Any
+
+            if self._enforce_types and v is not None:
                 # serialized format don't support tuple and set (they convert \
                 # both to list), so we need to convert them back IMPLICITLY
                 if self._checkDeserializedIterator(kwargs[k], v):
@@ -107,7 +111,6 @@ class Dataclass:
         cls,
         enforce_types: bool = True,
         frozen: bool = True,
-        allow_list_for_tuple: bool = False,
         **kwargs,
     ) -> None:
         """Initialize the subclass.
@@ -120,7 +123,6 @@ class Dataclass:
         """
         cls._enforce_types = enforce_types
         cls._frozen_after_init = frozen
-        cls._allow_list_for_iters = allow_list_for_tuple
         super().__init_subclass__(**kwargs)
 
     def __setattr__(self, key: str, value):
@@ -154,6 +156,9 @@ class Dataclass:
         Returns:
             str
         """
+        if not self.__clean_dict__:
+            return f"{self.__class__.__name__}()"
+
         parentheses = {
             "tuple": ("(", ")"),
             "list": ("[", "]"),
@@ -247,10 +252,8 @@ class Dataclass:
         Returns:
             dict
         """
-        # sometimes the types are strings and not class types
-        # i don't understand why, I gotta look into it
         return {
-            k: v if isinstance(v, type) else getattr(builtins, v)
+            k: v if isinstance(v, type) else None
             for k, v in self.__class__.__annotations__.items()
             if not k.startswith("_")
         }
