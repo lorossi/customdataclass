@@ -188,10 +188,9 @@ class Dataclass:
             value (any): value of the attribute
 
         Raises:
-            AttributeError: _description_
-            AttributeError: _description_
+            AttributeError: Attribute is not valid
         """
-        if key == "_serializer":
+        if key.startswith("_"):
             super().__setattr__(key, value)
             return
 
@@ -200,7 +199,7 @@ class Dataclass:
                 f"Can't set {key}. {self.__class__.__name__} is immutable."
             )
 
-        if key not in self.__class_attributes__ and key != "_frozen":
+        if key not in self.__class_attributes__:
             raise AttributeError(f"Can't set {key}. {key} is not a valid attribute")
 
         super().__setattr__(key, value)
