@@ -13,6 +13,9 @@
   "python.linting.enabled": true,
   "cSpell.words": [
     "customdataclass",
-    "Dataclass"
+    "Dataclass",
+    "dataclasses",
+    "pdoc",
+    "repr"
   ]
 }
