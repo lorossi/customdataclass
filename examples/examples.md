@@ -71,3 +71,19 @@ person = Person(name="John", age="42") # age is passed as string
 # access attributes
 print(person.name, person.age)
 ```
+
+## Dataclass with default values
+
+```python
+from customdataclass import Dataclass
+
+# define a dataclass with default values
+class Person(Dataclass):
+    name: str = "John"
+    age: int = 42
+
+# create an instance
+person = Person()
+# access attributes
+print(person.name, person.age)
+```
