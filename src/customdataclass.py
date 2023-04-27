@@ -55,8 +55,6 @@ class Dataclass:
                     if self._deserialized:
                         # convert to tuple or set
                         kwargs[k] = v(kwargs[k])
-                    else:
-                        raise TypeError(f"{k} should be {v}, not {type(kwargs[k])}")
 
                 # serialised format don't support classes (they convert them to \
                 # dict), so we need to convert them back IMPLICITLY
@@ -65,8 +63,6 @@ class Dataclass:
                     if self._deserialized:
                         # convert to class
                         kwargs[k] = v.from_dict(kwargs[k])
-                    else:
-                        raise TypeError(f"{k} should be {v}, not {type(kwargs[k])}")
 
                 # check that the type is correct
                 if not self._checkTypeCorrect(kwargs[k], v):
@@ -131,14 +127,7 @@ class Dataclass:
         if valid_type in (Any, None):
             return True
 
-        try:
-            valid_type = isinstance(value, valid_type)
-        except KeyError:
-            valid_type = value.__class__.__name__ == valid_type.__name__
-        except Exception:
-            valid_type = False
-
-        return valid_type
+        return isinstance(value, valid_type)
 
     def _checkDeserializedIterator(self, value: list[Any], valid_type: type) -> bool:
         """Check if the value is a valid iterator.
@@ -210,9 +199,6 @@ class Dataclass:
             raise AttributeError(
                 f"Can't set {key}. {self.__class__.__name__} is immutable."
             )
-
-        if key not in self.__class_attributes__:
-            raise AttributeError(f"Can't set {key}. {key} is not a valid attribute")
 
         super().__setattr__(key, value)
 
@@ -391,20 +377,15 @@ class Dataclass:
         d = {}
 
         for k, v in self.__clean_dict__.items():
-            if isinstance(k, Dataclass):
-                key = k.to_dict
-            else:
-                key = k
-
             if t := iterable_type(v):
                 # handle recursive lists
-                d[key] = t(i.to_dict if isinstance(i, Dataclass) else i for i in v)
+                d[k] = t(i.to_dict if isinstance(i, Dataclass) else i for i in v)
             elif isinstance(v, Dataclass):
                 # handle recursive dataclasses
-                d[key] = v.to_dict
+                d[k] = v.to_dict
             else:
                 # simple types
-                d[key] = v
+                d[k] = v
 
         return d
 
