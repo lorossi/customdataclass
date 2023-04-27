@@ -20,6 +20,7 @@ class Dataclass:
     _frozen_after_init: bool = True
     _enforce_types: bool = True
     _partial = False
+    _deserialized: bool = False
     _serializer: __module__ = None
 
     def __init__(self, **kwargs) -> Dataclass:
@@ -51,13 +52,21 @@ class Dataclass:
                 # serialized format don't support tuple and set (they convert \
                 # both to list), so we need to convert them back IMPLICITLY
                 if self._checkDeserializedIterator(kwargs[k], v):
-                    # convert to tuple or set
-                    kwargs[k] = v(kwargs[k])
+                    if self._deserialized:
+                        # convert to tuple or set
+                        kwargs[k] = v(kwargs[k])
+                    else:
+                        raise TypeError(f"{k} should be {v}, not {type(kwargs[k])}")
 
                 # serialised format don't support classes (they convert them to \
                 # dict), so we need to convert them back IMPLICITLY
                 if self._checkDeserializedClass(kwargs[k], v):
-                    kwargs[k] = v(**kwargs[k])
+                    # convert to class
+                    if self._deserialized:
+                        # convert to class
+                        kwargs[k] = v.from_dict(kwargs[k])
+                    else:
+                        raise TypeError(f"{k} should be {v}, not {type(kwargs[k])}")
 
                 # check that the type is correct
                 if not self._checkTypeCorrect(kwargs[k], v):
@@ -65,7 +74,10 @@ class Dataclass:
 
             setattr(self, k, kwargs.get(k, None))
 
+        # freeze the class
         self._frozen = self._frozen_after_init
+        # unset the deserialized flag
+        self._deserialized = False
 
     def _checkAttributesValid(self, kwargs: dict) -> bool:
         """Check if all the attributes are valid (as specified in the class \
@@ -453,6 +465,7 @@ class Dataclass:
         Returns:
             object
         """
+        cls._deserialized = True
         return cls(**cls._serializer.loads(json_string))
 
     @classmethod
@@ -466,6 +479,7 @@ class Dataclass:
         Returns:
             object
         """
+        cls._deserialized = True
         return cls(**cls._serializer.loads(toml_string))
 
     @classmethod
@@ -479,6 +493,7 @@ class Dataclass:
         Returns:
             object
         """
+        cls._deserialized = True
         return cls(
             **cls._serializer.load(yaml_string, Loader=cls._serializer.FullLoader)
         )
@@ -493,4 +508,5 @@ class Dataclass:
         Returns:
             object
         """
+        cls._deserialized = True
         return cls(**d)

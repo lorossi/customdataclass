@@ -24,6 +24,30 @@ class ContainerDataClass(Dataclass):
     string_dataclass: SubDataclass2
 
 
+class DataclassLevel1(Dataclass):
+    """Test class."""
+
+    int_var: int
+
+
+class DataclassLevel2(Dataclass):
+    """Test class."""
+
+    level1: DataclassLevel1
+
+
+class DataclassLevel3(Dataclass):
+    """Test class."""
+
+    level2: DataclassLevel2
+
+
+class DataclassLevel4(Dataclass):
+    """Test class."""
+
+    level3: DataclassLevel3
+
+
 class TestNestedDataclass(unittest.TestCase):
     def _createNestedDataclass(self) -> ContainerDataClass:
         s1 = SubDataclass1(int_var=1, float_var=1.0)
@@ -82,3 +106,31 @@ class TestNestedDataclass(unittest.TestCase):
 
         c5 = ContainerDataClass.from_yaml(c1.to_yaml)
         self.assertEqual(c1, c5)
+
+
+class TestNestedDataclassLevel4(unittest.TestCase):
+    def testCreation(self):
+        d = DataclassLevel4(
+            level3=DataclassLevel3(
+                level2=DataclassLevel2(level1=DataclassLevel1(int_var=1))
+            )
+        )
+        self.assertEqual(d.level3.level2.level1.int_var, 1)
+
+    def testSerializeDeserialize(self):
+        d = DataclassLevel4(
+            level3=DataclassLevel3(
+                level2=DataclassLevel2(level1=DataclassLevel1(int_var=1))
+            )
+        )
+        d2 = DataclassLevel4.from_dict(d.to_dict)
+        self.assertEqual(d, d2)
+
+        d3 = DataclassLevel4.from_json(d.to_json)
+        self.assertEqual(d, d3)
+
+        d4 = DataclassLevel4.from_toml(d.to_toml)
+        self.assertEqual(d, d4)
+
+        d5 = DataclassLevel4.from_yaml(d.to_yaml)
+        self.assertEqual(d, d5)

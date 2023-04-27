@@ -27,13 +27,6 @@ class TestComplexDataclass(unittest.TestCase):
             'set_var={1, 2, 3}, dict_var={"a": 1, "b": 2, "c": 3})'
         )
 
-    def setUp(self) -> None:
-        self._errors_list = []
-
-    def tearDown(self) -> None:
-        if self._errors_list:
-            raise Exception(self._errors_list)
-
     def testComplexDataclass(self):
         c = self._createComplexDataclass()
         self.assertEqual(c.list_var, [1, 2, 3])
@@ -69,3 +62,12 @@ class TestComplexDataclass(unittest.TestCase):
 
         c5 = ComplexDataclass.from_yaml(c1.to_yaml)
         self.assertEqual(c1, c5)
+
+    def testIterableType(self):
+        with self.assertRaises(TypeError):
+            ComplexDataclass(
+                list_var=[1, 2, 3],
+                tuple_var=[1, 2, 3],
+                set_var=[1, 2, 3],
+                dict_var={"a": 1, "b": 2, "c": 3},
+            )
