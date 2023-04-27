@@ -14,6 +14,22 @@ class Dataclass:
 
     The real reason is that I didn't really like the way dataclasses work,
     and I wanted to have a better control over the attributes.
+
+    Instead of using the decorator, the a Dataclass must be initialized
+    by inheriting from it and specifying the attributes in the class definition.
+
+    This simplifies the code, allowing a better control over the attributes
+    and the methods.
+
+    Check the examples folder for more information.
+
+    Initialization parameters:
+        enforce_types (bool, optional): If True, the types of the attributes \
+            are enforced. Defaults to True.
+        frozen (bool, optional): If True, attributes cannot be changed after \
+            initialization. Defaults to True
+        partial (bool, optional): If True, parameters can be missing in the \
+            initialization. Defaults to False.
     """
 
     _frozen: bool = False

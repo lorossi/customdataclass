@@ -44,6 +44,22 @@ class Dataclass:
 
     The real reason is that I didn&#39;t really like the way dataclasses work,
     and I wanted to have a better control over the attributes.
+
+    Instead of using the decorator, the a Dataclass must be initialized
+    by inheriting from it and specifying the attributes in the class definition.
+
+    This simplifies the code, allowing a better control over the attributes
+    and the methods.
+
+    Check the examples folder for more information.
+
+    Initialization parameters:
+        enforce_types (bool, optional): If True, the types of the attributes \
+            are enforced. Defaults to True.
+        frozen (bool, optional): If True, attributes cannot be changed after \
+            initialization. Defaults to True
+        partial (bool, optional): If True, parameters can be missing in the \
+            initialization. Defaults to False.
     &#34;&#34;&#34;
 
     _frozen: bool = False
@@ -119,7 +135,7 @@ class Dataclass:
             bool: True if all the attributes are valid, False otherwise.
         &#34;&#34;&#34;
         for k in kwargs.keys():
-            if k not in self.__class_attributes__:
+            if k not in self.__class_attributes__.keys():
                 raise AttributeError(f&#34;{k} is not a valid attribute&#34;)
 
         return True
@@ -130,8 +146,9 @@ class Dataclass:
         Args:
             kwargs (dict): kwargs to check
         &#34;&#34;&#34;
+        ...
         for k in self.__class_attributes__:
-            if k not in kwargs and self.__class_attributes__[k] is not None:
+            if k not in kwargs:
                 kwargs[k] = self.__getattribute__(k)
 
     def _checkAttributesPresent(self, kwargs: dict) -&gt; bool:
@@ -565,6 +582,18 @@ class Dataclass:
 <div class="desc"><p>Custom dataclass.</p>
 <p>The real reason is that I didn't really like the way dataclasses work,
 and I wanted to have a better control over the attributes.</p>
+<p>Instead of using the decorator, the a Dataclass must be initialized
+by inheriting from it and specifying the attributes in the class definition.</p>
+<p>This simplifies the code, allowing a better control over the attributes
+and the methods.</p>
+<p>Check the examples folder for more information.</p>
+<p>Initialization parameters:
+enforce_types (bool, optional): If True, the types of the attributes
+are enforced. Defaults to True.
+frozen (bool, optional): If True, attributes cannot be changed after
+initialization. Defaults to True
+partial (bool, optional): If True, parameters can be missing in the
+initialization. Defaults to False.</p>
 <p>Create a new Dataclass.</p>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -584,6 +613,22 @@ and I wanted to have a better control over the attributes.</p>
 
     The real reason is that I didn&#39;t really like the way dataclasses work,
     and I wanted to have a better control over the attributes.
+
+    Instead of using the decorator, the a Dataclass must be initialized
+    by inheriting from it and specifying the attributes in the class definition.
+
+    This simplifies the code, allowing a better control over the attributes
+    and the methods.
+
+    Check the examples folder for more information.
+
+    Initialization parameters:
+        enforce_types (bool, optional): If True, the types of the attributes \
+            are enforced. Defaults to True.
+        frozen (bool, optional): If True, attributes cannot be changed after \
+            initialization. Defaults to True
+        partial (bool, optional): If True, parameters can be missing in the \
+            initialization. Defaults to False.
     &#34;&#34;&#34;
 
     _frozen: bool = False
@@ -659,7 +704,7 @@ and I wanted to have a better control over the attributes.</p>
             bool: True if all the attributes are valid, False otherwise.
         &#34;&#34;&#34;
         for k in kwargs.keys():
-            if k not in self.__class_attributes__:
+            if k not in self.__class_attributes__.keys():
                 raise AttributeError(f&#34;{k} is not a valid attribute&#34;)
 
         return True
@@ -670,8 +715,9 @@ and I wanted to have a better control over the attributes.</p>
         Args:
             kwargs (dict): kwargs to check
         &#34;&#34;&#34;
+        ...
         for k in self.__class_attributes__:
-            if k not in kwargs and self.__class_attributes__[k] is not None:
+            if k not in kwargs:
                 kwargs[k] = self.__getattribute__(k)
 
     def _checkAttributesPresent(self, kwargs: dict) -&gt; bool:
