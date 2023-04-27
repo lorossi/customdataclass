@@ -12,6 +12,15 @@ class SampleClass(Dataclass):
     bool_var: bool
 
 
+class DifferentSampleClass(Dataclass):
+    """Test class."""
+
+    int_var: int
+    float_var: float
+    str_var: str
+    bool_var: bool
+
+
 class TestSampleClass(unittest.TestCase):
     def _createSampleClass(self):
         return SampleClass(int_var=1, float_var=1.0, str_var="1", bool_var=True)
@@ -106,3 +115,22 @@ class TestSampleClass(unittest.TestCase):
 
         s6 = SampleClass.from_yaml(s1.to_yaml)
         self.assertEqual(s1, s6)
+
+    def testDifferentClassesEquality(self):
+        s1 = self._createSampleClass()
+        s2 = DifferentSampleClass(int_var=1, float_var=1.0, str_var="1", bool_var=True)
+        self.assertNotEqual(s1, s2)
+
+
+class EmptyClass(Dataclass):
+    pass
+
+
+class TestEmptyClass(unittest.TestCase):
+    def testCreation(self):
+        s = EmptyClass()
+        self.assertEqual(s.attributes, [])
+
+    def testRepresentation(self):
+        s = EmptyClass()
+        self.assertEqual(repr(s), "EmptyClass()")

@@ -12,6 +12,7 @@
   "python.linting.pydocstyleEnabled": true,
   "python.linting.enabled": true,
   "cSpell.words": [
-    "customdataclass"
+    "customdataclass",
+    "Dataclass"
   ]
 }
