@@ -14,7 +14,7 @@ class RandomClass(Dataclass):
 
 
 class TestRandomClass(unittest.TestCase):
-    def _create_random_class(self, max_value=1e9, seed=None):
+    def _create_random_class(self, max_value=1000, seed=None):
         if seed is not None:
             random.seed(seed)
 
