@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from customdataclass import Dataclass
+from src.customdataclass import Dataclass
 
 
 class RandomClass(Dataclass):
