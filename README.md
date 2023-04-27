@@ -1,7 +1,7 @@
 # Customdataclass
 
 Custom implementation of the `dataclass` module from the standard Python library as a base class for other dataclasses.
-The documentation is available [here](https://lorossi.github.io/customdataclass)](https://lorossi.github.io/customdataclass).
+The documentation is available [here](https://lorossi.github.io/customdataclass).
 
 ## Details
 
