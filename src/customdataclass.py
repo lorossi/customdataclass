@@ -40,9 +40,12 @@ class Dataclass:
         # check if all the attributes are valid
         self._checkAttributesValid(kwargs)
 
-        # check if the attributes are valid
         if not self._partial:
+            # fix the default values
+            self._fixDefaultValues(kwargs)
+            # check if all the attributes are present
             self._checkAttributesPresent(kwargs)
+
         # fix the types
         self._fixMissingTypes()
 
@@ -86,10 +89,21 @@ class Dataclass:
             bool: True if all the attributes are valid, False otherwise.
         """
         for k in kwargs.keys():
-            if k not in self.__class_attributes__:
+            if k not in self.__class_attributes__.keys():
                 raise AttributeError(f"{k} is not a valid attribute")
 
         return True
+
+    def _fixDefaultValues(self, kwargs: dict) -> None:
+        """Fix the default values.
+
+        Args:
+            kwargs (dict): kwargs to check
+        """
+        ...
+        for k in self.__class_attributes__:
+            if k not in kwargs:
+                kwargs[k] = self.__getattribute__(k)
 
     def _checkAttributesPresent(self, kwargs: dict) -> bool:
         """Check if all the attributes are present (as specified in the class \
