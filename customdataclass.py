@@ -5,7 +5,6 @@ It does work kinda good.
 
 from __future__ import annotations
 
-import builtins
 import importlib
 from typing import Any
 
@@ -20,7 +19,8 @@ class Dataclass:
     _frozen: bool = False
     _frozen_after_init: bool = True
     _enforce_types: bool = True
-    _serializer = None
+    _partial = False
+    _serializer: __module__ = None
 
     def __init__(self, **kwargs) -> Dataclass:
         """Create a new Dataclass.
@@ -33,29 +33,26 @@ class Dataclass:
         if not kwargs:
             return
 
+        # unfreeze the class for the initialisation
         self._frozen = False
 
-        for k in kwargs.keys():
-            if k not in self.__class_attributes__:
-                raise AttributeError(f"{k} is not a valid attribute")
+        # check if all the attributes are valid
+        self._checkAttributesValid(kwargs)
+
+        # check if the attributes are valid
+        if not self._partial:
+            self._checkAttributesPresent(kwargs)
+        # fix the types
+        self._fixMissingTypes()
 
         for k, v in self.__class_attributes__.items():
-            if k not in kwargs:
-                raise AttributeError(f"Missing {k} in kwargs")
-
-            if v is None:
-                # no type has been specified
-                self.__class__.__annotations__[k] = Any
-
-            if self._enforce_types and v is not None:
+            # skip the loop if partial is True and the attribute is not present
+            if self._enforce_types and not (self._partial and k not in kwargs):
                 # serialized format don't support tuple and set (they convert \
                 # both to list), so we need to convert them back IMPLICITLY
                 if self._checkDeserializedIterator(kwargs[k], v):
                     # convert to tuple or set
-                    if v == tuple:
-                        kwargs[k] = tuple(kwargs[k])
-                    elif v == set:
-                        kwargs[k] = set(kwargs[k])
+                    kwargs[k] = v(kwargs[k])
 
                 # serialised format don't support classes (they convert them to \
                 # dict), so we need to convert them back IMPLICITLY
@@ -63,19 +60,73 @@ class Dataclass:
                     kwargs[k] = v(**kwargs[k])
 
                 # check that the type is correct
-                try:
-                    valid_type = isinstance(kwargs[k], v)
-                except KeyError:
-                    valid_type = kwargs[v].__class__.__name__ == v.__name__
-                except Exception:
-                    valid_type = False
-
-                if not valid_type and not isinstance(kwargs[k], v):
+                if not self._checkTypeCorrect(kwargs[k], v):
                     raise TypeError(f"{k} should be {v}, not {type(kwargs[k])}")
 
-            setattr(self, k, kwargs[k])
+            setattr(self, k, kwargs.get(k, None))
 
         self._frozen = self._frozen_after_init
+
+    def _checkAttributesValid(self, kwargs: dict) -> bool:
+        """Check if all the attributes are valid (as specified in the class \
+            definition).
+
+        Args:
+            kwargs (dict): kwargs to check
+
+        Returns:
+            bool: True if all the attributes are valid, False otherwise.
+        """
+        for k in kwargs.keys():
+            if k not in self.__class_attributes__:
+                raise AttributeError(f"{k} is not a valid attribute")
+
+        return True
+
+    def _checkAttributesPresent(self, kwargs: dict) -> bool:
+        """Check if all the attributes are present (as specified in the class \
+            definition).
+
+        Args:
+            kwargs (dict): kwargs to check
+
+        Returns:
+            bool: True if all the attributes are present, False otherwise.
+        """
+        for k in self.__class_attributes__.keys():
+            if k not in kwargs:
+                raise AttributeError(f"Missing {k} in kwargs")
+
+        return True
+
+    def _fixMissingTypes(self) -> None:
+        """Fix the missing types."""
+        for k, v in self.__class_attributes__.items():
+            if v is None:
+                # no type has been specified
+                self.__class__.__annotations__[k] = Any
+
+    def _checkTypeCorrect(self, value: Any, valid_type: type) -> bool:
+        """Check if the type of the value is correct.
+
+        Args:
+            value (Any): value to check
+            valid_type (type): type of the value
+
+        Returns:
+            bool: True if the type is correct, False otherwise.
+        """
+        if valid_type in (Any, None):
+            return True
+
+        try:
+            valid_type = isinstance(value, valid_type)
+        except KeyError:
+            valid_type = value.__class__.__name__ == valid_type.__name__
+        except Exception:
+            valid_type = False
+
+        return valid_type
 
     def _checkDeserializedIterator(self, value: list[Any], valid_type: type) -> bool:
         """Check if the value is a valid iterator.
@@ -111,6 +162,7 @@ class Dataclass:
         cls,
         enforce_types: bool = True,
         frozen: bool = True,
+        partial: bool = False,
         **kwargs,
     ) -> None:
         """Initialize the subclass.
@@ -120,9 +172,12 @@ class Dataclass:
                 are enforced.
             frozen (bool, optional): If True, attributes cannot be changed after \
                 initialization. Defaults to True.
+            partial (bool, optional): If True, the class can be initialized with \
+                missing attributes. Defaults to False.
         """
         cls._enforce_types = enforce_types
         cls._frozen_after_init = frozen
+        cls._partial = partial
         super().__init_subclass__(**kwargs)
 
     def __setattr__(self, key: str, value):
