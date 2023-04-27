@@ -1,6 +1,6 @@
 import unittest
 
-from src.customdataclass import Dataclass
+from customdataclass import Dataclass
 
 
 class DefaultValue(Dataclass):
