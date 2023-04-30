@@ -16,6 +16,7 @@
     "Dataclass",
     "dataclasses",
     "pdoc",
+    "pytest",
     "repr"
   ]
 }
