@@ -3,4 +3,4 @@ run-name: $${{ github.actor }}$$ is running workflow on $${{ github.repository }
 on: [push]
 jobs:
   run_unittest:
-    uses: ./.github/workflows/run-unittest
+    uses: ./.github/workflows/run-unittest.yaml
