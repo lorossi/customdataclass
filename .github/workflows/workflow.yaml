@@ -1,5 +1,5 @@
 name: workflow
-run-name: $${{ github.actor }}$$ is running workflow on $${{ github.repository }}
+run-name: {{ github.actor }} is running workflow on {{ github.repository }}
 on: [push]
 jobs:
   run_unittest:
