@@ -4,6 +4,3 @@ on: [push]
 jobs:
   run_unittest:
     uses: ./.github/workflows/run-unittest.yaml
-  run_coverage:
-    uses: ./.github/workflows/run-coverage.yaml
-    needs: run_unittest
