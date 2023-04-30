@@ -25,17 +25,17 @@ jobs:
           coverage html -d coverage
           coverage json -o coverage.json
       - name: Upload coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: .coverage
           path: .coverage
       - name: Publish coverage json
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage.json
           path: coverage.json
       - name: Publish coverage html
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: coverage
