@@ -35,6 +35,8 @@ echo -e "\033[1;32mDocumentation generated in $docsfolder\033[0m"
 mv ../$docsfolder/customdataclass.html ../$docsfolder/index.html
 # return to the root folder
 cd ..
+# clean the build folder
+rm -rf $buildsfolder > /dev/null 2>&1
 # build the package and get the last word as the package name
 python3 -m build -o $buildsfolder > /dev/null 2>&1
 echo -e "\033[1;Builds saved in $buildsfolder\033[0m"
