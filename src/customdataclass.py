@@ -156,7 +156,14 @@ class Dataclass:
         if valid_type in (Any, None):
             return True
 
-        return isinstance(value, valid_type)
+        try:
+            valid = isinstance(value, valid_type)
+        except TypeError:
+            valid = all(issubclass(v.__class__, valid_type.__args__[0]) for v in value)
+        except Exception:
+            valid = False
+
+        return valid
 
     def _checkDeserializedIterator(self, value: list[Any], valid_type: type) -> bool:
         """Check if the value is a valid iterator.

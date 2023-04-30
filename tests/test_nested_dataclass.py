@@ -134,3 +134,56 @@ class TestNestedDataclassLevel4(unittest.TestCase):
 
         d5 = DataclassLevel4.from_yaml(d.to_yaml)
         self.assertEqual(d, d5)
+
+
+class Person(Dataclass):
+    """Test class."""
+
+    name: str
+    age: int
+
+
+class Room(Dataclass):
+    """Test class."""
+
+    name: str
+    occupants: list[Person]
+
+
+class Inner(Dataclass):
+    """Test class."""
+
+    names: list[str]
+    value: int
+
+
+class Outer(Dataclass):
+    """Test class."""
+
+    inner: Inner
+
+
+class TestNestedDataclassList(unittest.TestCase):
+    def testCreation(self):
+        p1 = Person(name="Alice", age=1)
+        p2 = Person(name="Bob", age=2)
+        r = Room(name="Room", occupants=[p1, p2])
+        self.assertEqual(r.name, "Room")
+        self.assertEqual(r.occupants[0].name, "Alice")
+        self.assertEqual(r.occupants[0].age, 1)
+        self.assertEqual(r.occupants[1].name, "Bob")
+        self.assertEqual(r.occupants[1].age, 2)
+
+    def testSerializeDeserialize(self):
+        o1 = Outer(inner=Inner(names=["Alice", "Bob"], value=1))
+        o2 = Outer.from_dict(o1.to_dict)
+        self.assertEqual(o1, o2)
+
+        o3 = Outer.from_json(o1.to_json)
+        self.assertEqual(o1, o3)
+
+        o4 = Outer.from_toml(o1.to_toml)
+        self.assertEqual(o1, o4)
+
+        o5 = Outer.from_yaml(o1.to_yaml)
+        self.assertEqual(o1, o5)
