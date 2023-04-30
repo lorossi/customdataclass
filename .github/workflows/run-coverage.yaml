@@ -18,6 +18,8 @@ jobs:
       - name: Run coverage
         run: |
           coverage run -m unittest discover -s ./tests -p "test*.py" -q
+          coverage html -o coverage.html
+          coverage json -o coverage.json
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -28,5 +30,8 @@ jobs:
         with:
           name: coverage.json
           path: coverage.json
-        run: |
-          coverage json -o coverage.json
+      - name: Publish coverage html
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage.html
+          path: coverage/coverage.html
