@@ -1,5 +1,5 @@
 name: run-unittest
-on: [push]
+on: [workflow_call]
 
 jobs:
   build:
