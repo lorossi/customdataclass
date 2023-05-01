@@ -20,23 +20,41 @@ jsonreport="coverage.json"
 buildsfolder="dist"
 
 # compute the coverage and pipe all output to /dev/null
-coverage run -d $reportfolder -m unittest discover -s ./tests -p "test*.py" -q > /dev/null 2>&1
+coverage run -m unittest discover -s ./tests -p "test*.py" -q
 echo -e "\033[1;32mCoverage computed and saved in $reportfolder\033[0m"
-coverage html -d $reportfolder > /dev/null 2>&1
+coverage html -d $reportfolder
 echo -e "\033[1;32mCoverage report generated in $reportfolder\033[0m"
 # generate the coverage as a json file
-coverage json -o $jsonreport > /dev/null 2>&1
+coverage json -o $jsonreport
 echo -e "\033[1;32mJSON file generated in $jsonreport\033[0m"
 # build the documentation
 cd src
-pdoc --html -o ../$docsfolder customdataclass.py > /dev/null 2>&1
+pdoc --html -o ../$docsfolder customdataclass.py
 echo -e "\033[1;32mDocumentation generated in $docsfolder\033[0m"
 # rename the file
 mv ../$docsfolder/customdataclass.html ../$docsfolder/index.html
 # return to the root folder
 cd ..
 # clean the build folder
-rm -rf $buildsfolder > /dev/null 2>&1
+rm -rf $buildsfolder
 # build the package and get the last word as the package name
-python3 -m build -o $buildsfolder > /dev/null 2>&1
+python3 -m build -o $buildsfolder
 echo -e "\033[1;Builds saved in $buildsfolder\033[0m"
+
+# ask the user if he wants to push the package to pypi (in yellow)
+read -p $'\033[1;33mDo you want to push the package to PyPi? (y/n) \033[0m' -n 1 -r
+echo
+
+# if the user doesn't want to push the package, exit
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    echo -e "\033[1;31mExiting.\033[0m"
+    exit 1
+fi
+
+# install twine
+echo -e "\033[1;32mInstalling twine\033[0m"
+pip3 install twine
+# push the page to pypi using twine
+echo -e "\033[1;32mPushing to PyPi\033[0m"
+twine upload $buildsfolder/*
