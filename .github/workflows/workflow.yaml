@@ -1,6 +1,12 @@
 name: workflow
 run-name: ${{ github.actor }} is running workflow on ${{ github.repository }}
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge:
+    branches: [main]
 jobs:
   run_unittest:
     uses: ./.github/workflows/run-unittest.yaml
