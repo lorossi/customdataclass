@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 from src.customdataclass import Dataclass
 
@@ -134,3 +135,24 @@ class TestEmptyClass(unittest.TestCase):
     def testRepresentation(self):
         s = EmptyClass()
         self.assertEqual(repr(s), "EmptyClass()")
+
+
+class AnyClass(Dataclass):
+    """Test class."""
+
+    any_var: Any
+
+
+class TestAnyClass(unittest.TestCase):
+    def testCreation(self):
+        s = AnyClass(any_var=1)
+        self.assertEqual(s.any_var, 1)
+
+    def testEquality(self):
+        s1 = AnyClass(any_var=1)
+        s2 = AnyClass(any_var=1)
+        self.assertEqual(s1, s2)
+
+    def testRepresentation(self):
+        s = AnyClass(any_var=1)
+        self.assertEqual(repr(s), "AnyClass(any_var=1)")
