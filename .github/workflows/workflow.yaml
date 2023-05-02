@@ -8,3 +8,6 @@ on:
 jobs:
   run_unittest:
     uses: ./.github/workflows/run-unittest.yaml
+  run_install:
+    needs: run_unittest
+    uses: ./.github/workflows/run-install.yaml
