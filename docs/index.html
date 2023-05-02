@@ -35,8 +35,11 @@ It does work kinda good.
 
 from __future__ import annotations
 
-import importlib
 from typing import Any
+
+import json
+import yaml
+import toml
 
 
 class Dataclass:
@@ -404,23 +407,19 @@ class Dataclass:
             ImportError: Could not import the correct serializer
         &#34;&#34;&#34;
         libs = {
-            &#34;json&#34;: &#34;json&#34;,  # could be ujson but json is in the stdlib
-            &#34;yaml&#34;: &#34;PyYAML&#34;,  # not in the stdlib
-            &#34;toml&#34;: &#34;toml&#34;,  # not in the stdlib
+            &#34;json&#34;: json,  # could be ujson but json is in the stdlib
+            &#34;yaml&#34;: yaml,  # not in the stdlib
+            &#34;toml&#34;: toml,  # not in the stdlib
         }
         serializer = None
 
         for k, v in libs.items():
             if k in f.__name__:
-                serializer = importlib.import_module(k)
+                serializer = v
                 break
 
         if serializer is None:
-            raise ImportError(
-                &#34;Could not import the correct serializer for the function &#34;
-                f&#34;{f.__name__}.&#34;
-                f&#34; Please install the required library {v}.&#34;
-            )
+            raise NotImplementedError(f&#34;Serializer for {f.__name__} not implemented.&#34;)
 
         def wrapper(self: Dataclass, *args, **kwargs):
             self._serializer = serializer
@@ -981,23 +980,19 @@ initialization. Defaults to False.</p>
             ImportError: Could not import the correct serializer
         &#34;&#34;&#34;
         libs = {
-            &#34;json&#34;: &#34;json&#34;,  # could be ujson but json is in the stdlib
-            &#34;yaml&#34;: &#34;PyYAML&#34;,  # not in the stdlib
-            &#34;toml&#34;: &#34;toml&#34;,  # not in the stdlib
+            &#34;json&#34;: json,  # could be ujson but json is in the stdlib
+            &#34;yaml&#34;: yaml,  # not in the stdlib
+            &#34;toml&#34;: toml,  # not in the stdlib
         }
         serializer = None
 
         for k, v in libs.items():
             if k in f.__name__:
-                serializer = importlib.import_module(k)
+                serializer = v
                 break
 
         if serializer is None:
-            raise ImportError(
-                &#34;Could not import the correct serializer for the function &#34;
-                f&#34;{f.__name__}.&#34;
-                f&#34; Please install the required library {v}.&#34;
-            )
+            raise NotImplementedError(f&#34;Serializer for {f.__name__} not implemented.&#34;)
 
         def wrapper(self: Dataclass, *args, **kwargs):
             self._serializer = serializer
