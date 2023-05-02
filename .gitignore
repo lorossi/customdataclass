@@ -4,3 +4,4 @@ buildenv
 releaseenv
 .coverage
 *.egg-info
+.build
