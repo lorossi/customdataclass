@@ -97,6 +97,16 @@ class Dataclass:
         # unset the deserialized flag
         self._deserialized = False
 
+    def freeze(
+        self,
+    ) -> None:
+        """Freeze the class.
+
+        After this, attributes cannot be changed.
+        The action cannot be undone.
+        """
+        self._frozen = True
+
     def _checkAttributesValid(self, kwargs: dict) -> bool:
         """Check if all the attributes are valid (as specified in the class \
             definition).
@@ -425,6 +435,11 @@ class Dataclass:
                 d[k] = v
 
         return d
+
+    @property
+    def frozen(self) -> bool:
+        """Return the frozen status of the object."""
+        return self._frozen
 
     @property
     @_importDecorator

@@ -31,6 +31,8 @@ class TestNotFrozenClass(unittest.TestCase):
         self.assertIsInstance(s.str_var, str)
         self.assertIsInstance(s.bool_var, bool)
 
+        self.assertFalse(s.frozen)
+
     def testEquality(self):
         s1, _ = self._createDataclass()
         s2, _ = self._createDataclass()
@@ -49,3 +51,10 @@ class TestNotFrozenClass(unittest.TestCase):
         self.assertEqual(s1.bool_var, False)
 
         self.assertEqual(s1, s2)
+
+    def testFreeze(self):
+        s, _ = self._createDataclass()
+        s.freeze()
+        self.assertTrue(s.frozen)
+        with self.assertRaises(AttributeError):
+            s.int_var = 2
