@@ -5,8 +5,11 @@ It does work kinda good.
 
 from __future__ import annotations
 
-import importlib
 from typing import Any
+
+import json
+import yaml
+import toml
 
 
 class Dataclass:
@@ -374,23 +377,19 @@ class Dataclass:
             ImportError: Could not import the correct serializer
         """
         libs = {
-            "json": "json",  # could be ujson but json is in the stdlib
-            "yaml": "PyYAML",  # not in the stdlib
-            "toml": "toml",  # not in the stdlib
+            "json": json,  # could be ujson but json is in the stdlib
+            "yaml": yaml,  # not in the stdlib
+            "toml": toml,  # not in the stdlib
         }
         serializer = None
 
         for k, v in libs.items():
             if k in f.__name__:
-                serializer = importlib.import_module(k)
+                serializer = v
                 break
 
         if serializer is None:
-            raise ImportError(
-                "Could not import the correct serializer for the function "
-                f"{f.__name__}."
-                f" Please install the required library {v}."
-            )
+            raise NotImplementedError(f"Serializer for {f.__name__} not implemented.")
 
         def wrapper(self: Dataclass, *args, **kwargs):
             self._serializer = serializer

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "customdataclass"
-version = "0.1.1.1"
+version = "0.1.1.2"
 authors = [{ name = "Lorenzo Rossi", email = "pypi@lorenzoros.si" }]
 description = "A custom dataclass implementation"
 readme = "README.md"
@@ -14,7 +14,7 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 license = { text = "MIT" }
-dependencies = ["PyYAML>=6.0", "toml>=0.10.2", "json>=5.4.0"]
+dependencies = ["PyYAML>=6.0", "toml>=0.10.2"]
 
 [project.urls]
 "Homepage" = "https://github.com/lorossi/customdataclass"
