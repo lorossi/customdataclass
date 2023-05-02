@@ -1,24 +1,32 @@
 #!/bin/bash
 
-# run all test, pipe all output to stdout and grep for the OK string
-result=$(python3 -m unittest discover -s ./tests -p "test*.py" -q 2>&1 | grep OK)
-
-# if the result is empty, then the tests failed
-if [ -z "$result" ]
-then
-    echo -e "\033[1;31mTests failed. Exiting.\033[0m"
-    exit 1
-else
-    echo -e "\033[1;32mTests passed. Continuing.\033[0m"
-fi
-
 reportfolder="coverage"
 docsfolder="docs"
 jsonreport="coverage.json"
 buildsfolder="dist"
 
-# activate virtual environment
+# create the virtual environment
+python -m venv venv
+# activate the virtual environment
 source venv/bin/activate
+# install the requirements
+pip install -r requirements.txt
+pip install coverage
+
+# run all test, pipe all output to stdout and grep for the OK string
+result=$(python -m unittest discover -s ./tests -p "test*.py" -q 2>&1 | grep OK)
+
+# if the result is empty, then the tests failed
+if [ -z "$result" ]
+then
+    echo -e "\033[1;31mTests failed. Exiting.\033[0m"
+    deactivate
+    exit 1
+else
+    echo -e "\033[1;32mTests passed. Continuing.\033[0m"
+fi
+
+
 # compute the coverage
 coverage run -m unittest discover -s ./tests -p "test*.py" -q
 echo -e "\033[1;32mCoverage computed and saved in $reportfolder\033[0m"
@@ -39,7 +47,7 @@ cd ..
 # clean the build folder
 rm -rf $buildsfolder
 # build the package
-python3 -m build -o $buildsfolder
+python -m build -o $buildsfolder
 echo -e "\033[1;Builds saved in $buildsfolder\033[0m"
 # zip the builds
 tar -czvf $buildsfolder.tar.gz $buildsfolder
@@ -50,15 +58,15 @@ deactivate
 # try to install the package
 echo -e "\033[1;32mInstalling the package\033[0m"
 # create a virtual environment
-python3 -m venv buildenv
+python -m venv buildenv
 # activate the virtual environment
 source buildenv/bin/activate
 # install the requirements
-pip3 install PyYAML toml
+pip install PyYAML toml
 # find the package name
 package=$(ls $buildsfolder | grep .whl)
 # install the package, if it fails, exit
-pip3 install $buildsfolder/$package
+pip install $buildsfolder/$package
 # deactivate the virtual environment
 deactivate
 if [ $? -ne 0 ]
@@ -80,14 +88,14 @@ then
 fi
 
 # create a virtual environment for the build
-python3 -m venv releaseenv
+python -m venv releaseenv
 # activate the virtual environment
 source releaseenv/bin/activate
 # install the requirements
 pip install twine
 # install twine
 echo -e "\033[1;32mInstalling twine\033[0m"
-pip3 install twine
+pip install twine
 # push the page to pypi using twine
 echo -e "\033[1;32mPushing to PyPi\033[0m"
 twine upload $buildsfolder/*
