@@ -1,10 +1,14 @@
 # Customdataclass
 
-![coverage](https://img.shields.io/badge/dynamic/json?color=informational&label=code%20coverage&query=totals.percent_covered_display&suffix=%25&url=https%3A%2F%2Fraw.githubusercontent.com%2Florossi%2Fcustomdataclass%2Fmain%2Fcoverage.json)
-![issues](https://img.shields.io/github/issues-raw/lorossi/customdataclass)
-![license](https://img.shields.io/pypi/l/customdataclass)
-![python-version](https://img.shields.io/pypi/pyversions/customdataclass)
-![version](https://img.shields.io/pypi/v/customdataclass)
+<p align="center">
+<img src=https://img.shields.io/github/issues-raw/lorossi/customdataclass></img>
+<img src=https://img.shields.io/pypi/l/customdataclass></img>
+<img src=https://img.shields.io/pypi/pyversions/customdataclass></img>
+<img src=https://img.shields.io/pypi/v/customdataclass></img>
+<img src=https://img.shields.io/pypi/format/customdataclass></img>
+<img src=https://img.shields.io/badge/dynamic/json?color=informational&label=code%20coverage&query=totals.percent_covered_display&suffix=%25&url=https%3A%2F%2Fraw.githubusercontent.com%2Florossi%2Fcustomdataclass%2Fmain%2Fcoverage.json></img>
+<img src=https://img.shields.io/github/languages/top/lorossi/customdataclass></img>
+</p>
 
 Custom implementation of the `dataclass` module from the standard Python library as a base class for other dataclasses.
 The documentation is available [here](https://lorossi.github.io/customdataclass).
