@@ -1,4 +1,6 @@
 __pycache__
 venv
+buildenv
+releaseenv
 .coverage
 *.egg-info
