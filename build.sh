@@ -26,7 +26,6 @@ else
     echo -e "\033[1;32mTests passed. Continuing.\033[0m"
 fi
 
-
 # compute the coverage
 coverage run -m unittest discover -s ./tests -p "test*.py" -q
 echo -e "\033[1;32mCoverage computed and saved in $reportfolder\033[0m"
@@ -69,12 +68,12 @@ package=$(ls $buildsfolder | grep .whl)
 pip install $buildsfolder/$package
 # deactivate the virtual environment
 deactivate
+
 if [ $? -ne 0 ]
 then
     echo -e "\033[1;31mInstallation failed. Exiting.\033[0m"
     exit 1
 fi
-
 
 # ask the user if he wants to push the package to pypi (in yellow)
 read -p $'\033[1;33mDo you want to push the package to PyPi? (y/n) \033[0m' -n 1 -r
