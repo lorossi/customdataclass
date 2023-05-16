@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "customdataclass"
-version = "0.1.1.2"
+version = "0.1.1.3"
 authors = [{ name = "Lorenzo Rossi", email = "pypi@lorenzoros.si" }]
 description = "A custom dataclass implementation"
 readme = "README.md"

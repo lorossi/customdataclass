@@ -127,6 +127,16 @@ class Dataclass:
         # unset the deserialized flag
         self._deserialized = False
 
+    def freeze(
+        self,
+    ) -&gt; None:
+        &#34;&#34;&#34;Freeze the class.
+
+        After this, attributes cannot be changed.
+        The action cannot be undone.
+        &#34;&#34;&#34;
+        self._frozen = True
+
     def _checkAttributesValid(self, kwargs: dict) -&gt; bool:
         &#34;&#34;&#34;Check if all the attributes are valid (as specified in the class \
             definition).
@@ -455,6 +465,11 @@ class Dataclass:
                 d[k] = v
 
         return d
+
+    @property
+    def frozen(self) -&gt; bool:
+        &#34;&#34;&#34;Return the frozen status of the object.&#34;&#34;&#34;
+        return self._frozen
 
     @property
     @_importDecorator
@@ -700,6 +715,16 @@ initialization. Defaults to False.</p>
         # unset the deserialized flag
         self._deserialized = False
 
+    def freeze(
+        self,
+    ) -&gt; None:
+        &#34;&#34;&#34;Freeze the class.
+
+        After this, attributes cannot be changed.
+        The action cannot be undone.
+        &#34;&#34;&#34;
+        self._frozen = True
+
     def _checkAttributesValid(self, kwargs: dict) -&gt; bool:
         &#34;&#34;&#34;Check if all the attributes are valid (as specified in the class \
             definition).
@@ -1030,6 +1055,11 @@ initialization. Defaults to False.</p>
         return d
 
     @property
+    def frozen(self) -&gt; bool:
+        &#34;&#34;&#34;Return the frozen status of the object.&#34;&#34;&#34;
+        return self._frozen
+
+    @property
     @_importDecorator
     def to_json(self) -&gt; str:
         &#34;&#34;&#34;
@@ -1240,6 +1270,19 @@ def attributes(self) -&gt; list:
     return list(self.__class_attributes__.keys())</code></pre>
 </details>
 </dd>
+<dt id="customdataclass.Dataclass.frozen"><code class="name">var <span class="ident">frozen</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>Return the frozen status of the object.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def frozen(self) -&gt; bool:
+    &#34;&#34;&#34;Return the frozen status of the object.&#34;&#34;&#34;
+    return self._frozen</code></pre>
+</details>
+</dd>
 <dt id="customdataclass.Dataclass.to_dict"><code class="name">var <span class="ident">to_dict</span> : dict</code></dt>
 <dd>
 <div class="desc"><p>Return a dictionary with all the attributes of the object.</p>
@@ -1335,6 +1378,31 @@ def to_json_pretty(self) -&gt; str:
 </details>
 </dd>
 </dl>
+<h3>Methods</h3>
+<dl>
+<dt id="customdataclass.Dataclass.freeze"><code class="name flex">
+<span>def <span class="ident">freeze</span></span>(<span>self) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Freeze the class.</p>
+<p>After this, attributes cannot be changed.
+The action cannot be undone.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def freeze(
+    self,
+) -&gt; None:
+    &#34;&#34;&#34;Freeze the class.
+
+    After this, attributes cannot be changed.
+    The action cannot be undone.
+    &#34;&#34;&#34;
+    self._frozen = True</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -1351,10 +1419,12 @@ def to_json_pretty(self) -&gt; str:
 <h4><code><a title="customdataclass.Dataclass" href="#customdataclass.Dataclass">Dataclass</a></code></h4>
 <ul class="two-column">
 <li><code><a title="customdataclass.Dataclass.attributes" href="#customdataclass.Dataclass.attributes">attributes</a></code></li>
+<li><code><a title="customdataclass.Dataclass.freeze" href="#customdataclass.Dataclass.freeze">freeze</a></code></li>
 <li><code><a title="customdataclass.Dataclass.from_dict" href="#customdataclass.Dataclass.from_dict">from_dict</a></code></li>
 <li><code><a title="customdataclass.Dataclass.from_json" href="#customdataclass.Dataclass.from_json">from_json</a></code></li>
 <li><code><a title="customdataclass.Dataclass.from_toml" href="#customdataclass.Dataclass.from_toml">from_toml</a></code></li>
 <li><code><a title="customdataclass.Dataclass.from_yaml" href="#customdataclass.Dataclass.from_yaml">from_yaml</a></code></li>
+<li><code><a title="customdataclass.Dataclass.frozen" href="#customdataclass.Dataclass.frozen">frozen</a></code></li>
 <li><code><a title="customdataclass.Dataclass.to_dict" href="#customdataclass.Dataclass.to_dict">to_dict</a></code></li>
 <li><code><a title="customdataclass.Dataclass.to_json" href="#customdataclass.Dataclass.to_json">to_json</a></code></li>
 <li><code><a title="customdataclass.Dataclass.to_json_pretty" href="#customdataclass.Dataclass.to_json_pretty">to_json_pretty</a></code></li>
