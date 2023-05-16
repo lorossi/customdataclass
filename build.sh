@@ -4,14 +4,22 @@ reportfolder="coverage"
 docsfolder="docs"
 jsonreport="coverage.json"
 buildsfolder="dist"
+virtualenv="buildvenv"
+releaseenv="releaseenv"
+
+# create the folders if they don't exist
+mkdir -p $reportfolder
+mkdir -p $docsfolder
+mkdir -p $buildsfolder
 
 # create the virtual environment
-python -m venv venv
+python -m venv $virtualenv
 # activate the virtual environment
-source venv/bin/activate
+source $virtualenv/bin/activate
 # install the requirements
+pip install --upgrade pip
 pip install -r requirements.txt
-pip install coverage
+pip install coverage pdoc3 build
 
 # run all test, pipe all output to stdout and grep for the OK string
 result=$(python -m unittest discover -s ./tests -p "test*.py" -q 2>&1 | grep OK)
@@ -51,23 +59,16 @@ echo -e "\033[1;Builds saved in $buildsfolder\033[0m"
 # zip the builds
 tar -czvf $buildsfolder.tar.gz $buildsfolder
 echo -e "\033[1;32mBuilds zipped in $buildsfolder.tar.gz\033[0m"
-# deactivate virtual environment
-deactivate
-
 # try to install the package
 echo -e "\033[1;32mInstalling the package\033[0m"
-# create a virtual environment
-python -m venv buildenv
-# activate the virtual environment
-source buildenv/bin/activate
-# install the requirements
-pip install PyYAML toml
 # find the package name
 package=$(ls $buildsfolder | grep .whl)
 # install the package, if it fails, exit
 pip install $buildsfolder/$package
 # deactivate the virtual environment
 deactivate
+# delete the virtual environment
+rm -rf $virtualenv
 
 if [ $? -ne 0 ]
 then
@@ -87,9 +88,9 @@ then
 fi
 
 # create a virtual environment for the build
-python -m venv releaseenv
+python -m venv $releaseenv
 # activate the virtual environment
-source releaseenv/bin/activate
+source $releaseenv/bin/activate
 # install the requirements
 pip install twine
 # install twine
@@ -100,3 +101,5 @@ echo -e "\033[1;32mPushing to PyPi\033[0m"
 twine upload $buildsfolder/*
 # deactivate the virtual environment
 deactivate
+# delete the virtual environment
+rm -rf $releaseenv
