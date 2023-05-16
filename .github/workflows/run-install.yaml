@@ -18,6 +18,6 @@ jobs:
           pip install -r requirements.txt
       - name: Build and install package
         run: |
-          mkdir dist
+          mkdir -p dist
           python -m build --wheel -o dist/
           pip install dist/*.whl
