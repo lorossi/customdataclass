@@ -5,11 +5,12 @@ It does work kinda good.
 
 from __future__ import annotations
 
+import json
+import types
 from typing import Any
 
-import json
-import yaml
 import toml
+import yaml
 
 
 class Dataclass:
@@ -27,20 +28,21 @@ class Dataclass:
     Check the examples folder for more information.
 
     Initialization parameters:
-        enforce_types (bool, optional): If True, the types of the attributes \
+        enforce_types (bool, optional): If True, the types of the attributes
             are enforced. Defaults to True.
-        frozen (bool, optional): If True, attributes cannot be changed after \
+        frozen (bool, optional): If True, attributes cannot be changed after
             initialization. Defaults to True
-        partial (bool, optional): If True, parameters can be missing in the \
+        partial (bool, optional): If True, parameters can be missing in the
             initialization. Defaults to False.
     """
 
-    _frozen: bool = False
-    _frozen_after_init: bool = True
-    _enforce_types: bool = True
-    _partial = False
-    _deserialized: bool = False
-    _serializer: __module__ = None
+    _frozen: bool = False  # the class is frozen and cannot be changed
+    _frozen_after_init: bool = True  # the class is frozen after initialization
+    _enforce_types: bool = True  # the types of the attributes are enforced
+    _partial: bool = False  # the class can be initialized with missing attributes
+    _deserialized: bool = False  # the class is being deserialized
+    _serializer: str | None = None  # the serializer used
+    _attributes_dict: dict[str, tuple[type]] | None = None  # cache the attributes
 
     def __init__(self, **kwargs) -> Dataclass:
         """Create a new Dataclass.
@@ -50,47 +52,54 @@ class Dataclass:
             AttributeError: an attribute is missing in kwargs.
             TypeError: a value is not of the correct type.
         """
-        if not kwargs:
-            return
-
+        # initialize the attributes dict
+        self._attributes_dict = None
         # unfreeze the class for the initialisation
         self._frozen = False
 
         # check if all the attributes are valid
         self._checkAttributesValid(kwargs)
-
-        if not self._partial:
-            # fix the default values
-            self._fixDefaultValues(kwargs)
-            # check if all the attributes are present
-            self._checkAttributesPresent(kwargs)
-
-        # fix the types
-        self._fixMissingTypes()
+        # set the default values
+        self._setDefaultValues(kwargs)
 
         for k, v in self.__class_attributes__.items():
             # skip the loop if partial is True and the attribute is not present
-            if self._enforce_types and not (self._partial and k not in kwargs):
-                # serialized format don't support tuple and set (they convert \
+            if self._deserialized and self._enforce_types:
+                # serialized format don't support tuple and set (they convert
                 # both to list), so we need to convert them back IMPLICITLY
                 if self._checkDeserializedIterator(kwargs[k], v):
-                    if self._deserialized:
-                        # convert to tuple or set
-                        kwargs[k] = v(kwargs[k])
+                    # convert to tuple or set
+                    kwargs[k] = self._deserializeOperator(kwargs[k], v)
 
-                # serialised format don't support classes (they convert them to \
+                # serialised format don't support classes (they convert them to
                 # dict), so we need to convert them back IMPLICITLY
-                if self._checkDeserializedClass(kwargs[k], v):
+                elif self._checkDeserializedClass(kwargs[k], v):
                     # convert to class
-                    if self._deserialized:
-                        # convert to class
-                        kwargs[k] = v.from_dict(kwargs[k])
+                    class_type, is_list = self._getDeserializedClass(v)
+                    kwargs[k] = self._deserializeClass(kwargs[k], class_type, is_list)
 
-                # check that the type is correct
-                if not self._checkTypeCorrect(kwargs[k], v):
-                    raise TypeError(f"{k} should be {v}, not {type(kwargs[k])}")
+            # check that the type is correct
+            current_value = kwargs.get(k, None)
+            if self._enforce_types:
+                correct_type = self._checkTypeCorrect(current_value, v)
+            else:
+                correct_type = True
+            # the type is not correct if:
+            #   - the class is partial, the current value is not None,
+            #       the types are enforced and the type is not correct
+            #   - the class is not partial and the type is not correct
+            raise_condition = (
+                self._partial
+                and current_value is not None
+                and self._enforce_types
+                and not correct_type
+            ) or (not self._partial and not correct_type and self._enforce_types)
 
-            setattr(self, k, kwargs.get(k, None))
+            if raise_condition:
+                types = ", ".join(t.__name__ for t in v)
+                raise TypeError(f"{k} should be {types}, not {current_value.__class__}")
+
+            setattr(self, k, current_value)
 
         # freeze the class
         self._frozen = self._frozen_after_init
@@ -108,7 +117,7 @@ class Dataclass:
         self._frozen = True
 
     def _checkAttributesValid(self, kwargs: dict) -> bool:
-        """Check if all the attributes are valid (as specified in the class \
+        """Check if all the attributes are valid (as specified in the class
             definition).
 
         Args:
@@ -123,63 +132,64 @@ class Dataclass:
 
         return True
 
-    def _fixDefaultValues(self, kwargs: dict) -> None:
-        """Fix the default values.
+    def _setDefaultValues(self, kwargs: dict) -> None:
+        """Set the default values for the attributes.
 
         Args:
             kwargs (dict): kwargs to check
         """
         for k in self.__class_attributes__:
             if k not in kwargs:
-                kwargs[k] = self.__getattribute__(k)
+                try:
+                    default_value = self.__getattribute__(k)
+                except AttributeError:
+                    if self._partial:
+                        default_value = None
+                    else:
+                        raise AttributeError(f"Missing {k} in kwargs")
 
-    def _checkAttributesPresent(self, kwargs: dict) -> bool:
-        """Check if all the attributes are present (as specified in the class \
-            definition).
+                kwargs[k] = default_value
 
-        Args:
-            kwargs (dict): kwargs to check
-
-        Returns:
-            bool: True if all the attributes are present, False otherwise.
-        """
-        for k in self.__class_attributes__.keys():
-            if k not in kwargs:
-                raise AttributeError(f"Missing {k} in kwargs")
-
-        return True
-
-    def _fixMissingTypes(self) -> None:
-        """Fix the missing types."""
-        for k, v in self.__class_attributes__.items():
-            if v is None:
-                # no type has been specified
-                self.__class__.__annotations__[k] = Any
-
-    def _checkTypeCorrect(self, value: Any, valid_type: type) -> bool:
+    def _checkTypeCorrect(self, value: Any, valid_type: tuple[type]) -> bool:
         """Check if the type of the value is correct.
 
         Args:
             value (Any): value to check
-            valid_type (type): type of the value
+            valid_type (tuple[type]): tuple of valid types
 
         Returns:
             bool: True if the type is correct, False otherwise.
         """
-        if valid_type in (Any, None):
+        if Any in valid_type:
             return True
+        if value is None:
+            return any(t == types.NoneType for t in valid_type)  # noqa: E721
 
-        try:
-            valid = isinstance(value, valid_type)
-        except TypeError:
-            valid = all(issubclass(v.__class__, valid_type.__args__[0]) for v in value)
-        except Exception:
-            valid = False
+        def check_type(value, type: Any) -> bool:
+            # if the type has the __origin__ attribute, it's a generic type
+            if hasattr(type, "__origin__"):
+                if type.__origin__ is dict:
+                    # check if the type is a dict of the specified type
+                    for k in value:
+                        for t in type.__args__:
+                            if check_type(k, t):
+                                return True
+            try:
+                # isinstance doesn't work with generic types
+                return isinstance(value, type)
+            except TypeError:
+                # check if the type is a tuple of the specified type
+                for i, t in enumerate(type.__args__):
+                    if check_type(value[i], t):
+                        return True
 
-        return valid
+        # at least one of the types must be correct
+        return any(check_type(value, t) for t in valid_type)
 
-    def _checkDeserializedIterator(self, value: list[Any], valid_type: type) -> bool:
-        """Check if the value is a valid iterator.
+    def _deserializeOperator(
+        self, value: list[Any], valid_type: tuple[type]
+    ) -> set[Any] | tuple[Any] | list[Any]:
+        """Return the deserialized iterator.
 
         Args:
             value (list[Any]): value to check
@@ -188,12 +198,74 @@ class Dataclass:
         Returns:
             bool: True if the value is valid, False otherwise.
         """
-        if not isinstance(value, list):
-            return False
+        class_type = next(t for t in valid_type if t is not None)
+        return class_type(value)
 
-        return valid_type in (set, tuple)
+    def _checkDeserializedIterator(self, value: list[Any], valid_type: type) -> bool:
+        """Check if the value is a deserialized iterator.
 
-    def _checkDeserializedClass(self, value: dict, valid_type: type) -> bool:
+        JSON, TOML and YAML convert sets and tuples to lists, so we need to
+        convert them back.
+
+        Args:
+            value (list[Any]): value to check
+            valid_type (type): type of the value
+
+        Returns:
+            bool: True if the value is valid, False otherwise.
+        """
+        if isinstance(value, list):
+            if list in valid_type:
+                return False
+            if any(t in valid_type for t in (tuple, set)):
+                return True
+        # if value is not a list, then there's no need to convert it
+        return False
+
+    def _deserializeClass(
+        self, value: dict | list[dict], valid_type: type, is_list: bool
+    ) -> list[Dataclass] | Dataclass:
+        """Check if the value is a deserialized class.
+
+        JSON, TOML and YAML convert classes to dicts, so we need to
+        convert them back.
+        Since both lists of dictionaries and single dictionaries
+        can be instances of Dataclass objects (or subclasses of Dataclass),
+        we need to check if the value is a list or not.
+
+        Args:
+            value (dict | list[dict]): value to check
+            valid_type (type): type of the value
+
+        Returns:
+            bool: True if the value is valid, False otherwise.
+        """
+        # a list of Dataclass is converted to a list
+        # a single Dataclass is converted to a dict
+        if is_list:
+            return [valid_type.from_dict(i) for i in value]
+
+        return valid_type.from_dict(value)
+
+    def _getDeserializedClass(self, valid_type: tuple[type]) -> tuple[type, bool]:
+        """Return the deserialized class.
+
+        Objects
+
+        Args:
+            valid_type (tuple[type]): type of the value
+
+        Returns:
+            tuple[type, bool]: type of the value and if it's a list
+        """
+        convert_class = next(t for t in valid_type if t is not None)
+        if hasattr(convert_class, "__origin__") and convert_class.__origin__ is list:
+            inner_class = next(t for t in convert_class.__args__ if t is not None)
+            return inner_class, True
+
+        return convert_class, False
+
+    def _checkDeserializedClass(self, value: dict, valid_type: tuple[type]) -> bool:
         """Check if the value is a valid class.
 
         Args:
@@ -203,10 +275,24 @@ class Dataclass:
         Returns:
             bool: True if the value is valid, False otherwise.
         """
-        if not isinstance(value, dict):
+        # a list of Dataclass is converted to a list
+        # a single Dataclass is converted to a dict
+        if not isinstance(value, dict) and not isinstance(value, list):
             return False
 
-        return issubclass(valid_type, Dataclass)
+        if isinstance(value, dict):
+            return any(issubclass(t, Dataclass) for t in valid_type)
+
+        if isinstance(value, list):
+            for i in value:
+                if not isinstance(i, dict):
+                    return False
+
+            for t in valid_type:
+                if hasattr(t, "__origin__") and t.__origin__ is list:
+                    return any(issubclass(t, Dataclass) for t in t.__args__)
+
+        return False
 
     def __init_subclass__(
         cls,
@@ -218,11 +304,11 @@ class Dataclass:
         """Initialize the subclass.
 
         Args:
-            enforce_types (bool, optional): If True, the types of the attributes \
-                are enforced.
-            frozen (bool, optional): If True, attributes cannot be changed after \
+            enforce_types (bool, optional): If True, the types of the attributes
+                are enforced. Defaults to True.
+            frozen (bool, optional): If True, attributes cannot be changed after
                 initialization. Defaults to True.
-            partial (bool, optional): If True, the class can be initialized with \
+            partial (bool, optional): If True, the class can be initialized with
                 missing attributes. Defaults to False.
         """
         cls._enforce_types = enforce_types
@@ -329,7 +415,7 @@ class Dataclass:
     def __contains__(self, item) -> bool:
         """Check if the object contains an item.
 
-        This is used to check if an attribute exists via the \
+        This is used to check if an attribute exists via the
         built-in `in` operator.
 
         Args:
@@ -355,15 +441,24 @@ class Dataclass:
         Returns:
             dict
         """
-        return {
-            k: v if isinstance(v, type) else None
-            for k, v in self.__class__.__annotations__.items()
-            if not k.startswith("_")
-        }
+        # cache the result
+        if self._attributes_dict is not None:
+            return self._attributes_dict
+
+        self._attributes_dict = {}
+        for k, v in self.__class__.__annotations__.items():
+            if v is Any:
+                self._attributes_dict[k] = (Any,)
+            elif isinstance(v, types.UnionType):
+                self._attributes_dict[k] = tuple(t for t in v.__args__)
+            else:
+                self._attributes_dict[k] = (v,)
+
+        return self._attributes_dict
 
     @property
     def __clean_dict__(self) -> dict:
-        """Return a dictionary with all the attributes of the object, \
+        """Return a dictionary with all the attributes of the object,
             except for the ones starting with an underscore (private).
 
         Returns:
@@ -375,7 +470,7 @@ class Dataclass:
         """Import the correct serializer for the function.
 
         The serializer will be put in the `_serializer` attribute of the object.
-        It's mandatory to have all the functions decorated with this decorator \
+        It's mandatory to have all the functions decorated with this decorator
         to contain the name of the serializer in their name.
 
         Unittest will require all the serializers to be installed.
@@ -397,9 +492,6 @@ class Dataclass:
             if k in f.__name__:
                 serializer = v
                 break
-
-        if serializer is None:
-            raise NotImplementedError(f"Serializer for {f.__name__} not implemented.")
 
         def wrapper(self: Dataclass, *args, **kwargs):
             self._serializer = serializer
@@ -445,7 +537,7 @@ class Dataclass:
     @_importDecorator
     def to_json(self) -> str:
         """
-        Return a json representation of the object. \
+        Return a json representation of the object.
         Attributes are recursively converted to json.
 
         Returns:
@@ -501,42 +593,42 @@ class Dataclass:
 
     @classmethod
     @_importDecorator
-    def from_json(cls, json_string: str):
+    def from_json(cls, json_string: str) -> Dataclass:
         """Create an object from a json string.
 
         Args:
             json_string (str): json string
 
         Returns:
-            object
+            Dataclass
         """
         cls._deserialized = True
         return cls(**cls._serializer.loads(json_string))
 
     @classmethod
     @_importDecorator
-    def from_toml(cls, toml_string: str):
+    def from_toml(cls, toml_string: str) -> Dataclass:
         """Create an object from a toml string.
 
         Args:
             toml_string (str): toml string
 
         Returns:
-            object
+            Dataclass
         """
         cls._deserialized = True
         return cls(**cls._serializer.loads(toml_string))
 
     @classmethod
     @_importDecorator
-    def from_yaml(cls, yaml_string: str):
+    def from_yaml(cls, yaml_string: str) -> Dataclass:
         """Create an object from a yaml string.
 
         Args:
             yaml_string (str): yaml string
 
         Returns:
-            object
+            Dataclass
         """
         cls._deserialized = True
         return cls(
@@ -544,14 +636,14 @@ class Dataclass:
         )
 
     @classmethod
-    def from_dict(cls, d: dict):
+    def from_dict(cls, d: dict) -> Dataclass:
         """Create an object from a dictionary.
 
         Args:
             d (dict): dictionary
 
         Returns:
-            object
+            Dataclass
         """
         cls._deserialized = True
         return cls(**d)
