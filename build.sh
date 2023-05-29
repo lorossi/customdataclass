@@ -35,7 +35,7 @@ else
 fi
 
 # compute the coverage
-coverage run -m unittest discover -s ./tests -p "test*.py" -q
+coverage run --omit="*/test*" -m unittest discover -s ./tests -p "test*.py" -q
 echo -e "\033[1;32mCoverage computed and saved in $reportfolder\033[0m"
 # generate the coverage report in html
 coverage html -d $reportfolder
