@@ -25,7 +25,7 @@ A while back I was working on a project *(now lost in a dusty corner of my GitHu
 After a quick Google-fu session, I found out the existence of the `dataclass` decorator, swiftly provided by the `dataclasses`. This decorator allows you to create a class that is used only to hold data, and it provides a lot of useful features, such as:
 
 - default values for attributes
-- pre-determined methods *(such as `__init__`, `__repr__`, `__hash__`, etc.)*
+- pre-determined methods *(such as `__init__`, `__repr__`, etc.)*
 
 However, it does not handle easily features like:
 
@@ -40,6 +40,19 @@ All these were important for the project *(which once again will be finished, on
 
 I chose to create a class *(and not a decorator)* because I wanted to be able to inherit from it and to be able to use it as a base class for other dataclasses, thus solving the aforementioned problems.
 
+### Provided features
+
+- default values for attributes
+- type checking *(can be deactivated)*
+- nested dataclasses *(i.e. a dataclass that has another dataclass as an attribute)*
+- frozen dataclasses
+  - a dataclass cannot be modified after its creation *(if the parameter `frozen` is set to `True`, as per default)*
+  - otherwise, a dataclass can be manually frozen using the `freeze` method
+- equality comparison *(via the `__eq__` method)*
+- hashing *(via the `__hash__` method)*
+- full support inheritance
+- full support for methods overriding and custom properties
+
 ## Installing
 
 The package is available on PyPI and can be installed using `pip`:
@@ -50,7 +63,7 @@ pip install -u customdataclass
 
 ## Examples
 
-Examples can be found in the `examples` folder, both in a text file [Examples.md](examples/Examples.md) and in a set of Python scripts.
+Examples can be found in the `examples` folder, both in a text file [EXAMPLES.md](EXAMPLES.md) and in a set of Python scripts.
 
 ## Tests
 
