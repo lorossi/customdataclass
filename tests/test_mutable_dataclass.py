@@ -58,3 +58,12 @@ class TestNotFrozenClass(unittest.TestCase):
         self.assertTrue(s.frozen)
         with self.assertRaises(AttributeError):
             s.int_var = 2
+
+    def testUnfreeze(self):
+        s, _ = self._createDataclass()
+        s.freeze()
+        self.assertTrue(s.frozen)
+        with self.assertRaises(AttributeError):
+            s.freeze = False
+        with self.assertRaises(AttributeError):
+            s.int_var = 2

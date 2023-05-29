@@ -57,6 +57,10 @@ class TestPartialDataclass(unittest.TestCase):
         p.bool_var = True
         self.assertEqual(p.bool_var, True)
 
+    def testInvalidField(self):
+        with self.assertRaises(TypeError):
+            PartialDataclass(int_var="1", float_var=1.0, str_var="1")
+
     def testEquality(self):
         p1 = PartialMutableDataclass(int_var=1, float_var=1.0, str_var="1")
         p2 = PartialMutableDataclass(int_var=1, float_var=1.0, str_var="1")

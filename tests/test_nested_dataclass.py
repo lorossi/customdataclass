@@ -187,3 +187,68 @@ class TestNestedDataclassList(unittest.TestCase):
 
         o5 = Outer.from_yaml(o1.to_yaml)
         self.assertEqual(o1, o5)
+
+
+class FakeNestedDataclass(Dataclass):
+    int_var: int
+    dict_var: dict[str, int] = {"a": 1, "b": 2}
+    list_var: list[int] = [1, 2, 3]
+
+
+class TestFakeNestedDataclass(unittest.TestCase):
+    def testCreation(self):
+        f = FakeNestedDataclass(int_var=1)
+        self.assertEqual(f.int_var, 1)
+        self.assertEqual(f.dict_var, {"a": 1, "b": 2})
+        self.assertEqual(f.list_var, [1, 2, 3])
+
+
+class BaseDataclass(Dataclass):
+    """Test class."""
+
+    int_var: int
+    float_var: float
+
+
+class DerivedDataclass(BaseDataclass):
+    """Test class."""
+
+    str_var: str
+    list_var: list
+
+
+class ContainerDataClass2(Dataclass):
+    """Test class."""
+
+    number_dataclass: BaseDataclass
+    string_dataclass: DerivedDataclass
+
+
+class TestNestedDataclass2(unittest.TestCase):
+    def _createNestedDataclass(self) -> ContainerDataClass2:
+        s1 = BaseDataclass(int_var=1, float_var=1.0)
+        s2 = DerivedDataclass(str_var="123", list_var=[1, 2, 3])
+        return ContainerDataClass2(number_dataclass=s1, string_dataclass=s2)
+
+    def testCreation(self):
+        s = self._createNestedDataclass()
+        self.assertEqual(s.number_dataclass.int_var, 1)
+        self.assertEqual(s.number_dataclass.float_var, 1.0)
+        self.assertEqual(s.string_dataclass.str_var, "123")
+        self.assertEqual(s.string_dataclass.list_var, [1, 2, 3])
+
+        self.assertIsInstance(s.number_dataclass.int_var, int)
+        self.assertIsInstance(s.number_dataclass.float_var, float)
+        self.assertIsInstance(s.string_dataclass.str_var, str)
+        self.assertIsInstance(s.string_dataclass.list_var, list)
+
+    def testEquality(self):
+        s1 = self._createNestedDataclass()
+        s2 = self._createNestedDataclass()
+
+        self.assertEqual(s1, s2)
+        self.assertEqual(str(s1), str(s2))
+        self.assertEqual(repr(s1), repr(s2))
+
+        with self.assertRaises(TypeError):
+            hash(s1)

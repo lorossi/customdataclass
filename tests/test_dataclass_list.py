@@ -21,6 +21,14 @@ class ListClass(Dataclass):
     bool_list: list[bool]
 
 
+class SublistClass(Dataclass):
+    int_var: int
+
+
+class NestedListDataclass(Dataclass):
+    sublist_list: list[SublistClass]
+
+
 class TestSampleClass(unittest.TestCase):
     def _createSampleClass(self, val: int = 0):
         return SampleClass(
@@ -79,3 +87,35 @@ class TestListClass(unittest.TestCase):
 
         for i in range(100):
             self.assertIn(class_list[i], class_list)
+
+
+class TestNestedListDataclass(unittest.TestCase):
+    def _createNestedListDataclass(self, size: int = 10):
+        return NestedListDataclass(
+            sublist_list=[SublistClass(int_var=x) for x in range(size)],
+        )
+
+    def testCreation(self):
+        n1 = self._createNestedListDataclass(10)
+        n2 = self._createNestedListDataclass(10)
+        self.assertEqual(n1, n2)
+        n3 = self._createNestedListDataclass(20)
+        self.assertNotEqual(n1, n3)
+
+    def testTypeWrong(self):
+        with self.assertRaises(TypeError):
+            NestedListDataclass(sublist_list=[1, 2, 3])
+
+    def testSerializeDeserialize(self):
+        n1 = self._createNestedListDataclass(1)
+        n2 = NestedListDataclass.from_dict(n1.to_dict)
+        self.assertEqual(n1, n2)
+
+        n3 = NestedListDataclass.from_json(n1.to_json)
+        self.assertEqual(n1, n3)
+
+        n4 = NestedListDataclass.from_toml(n1.to_toml)
+        self.assertEqual(n1, n4)
+
+        n5 = NestedListDataclass.from_yaml(n1.to_yaml)
+        self.assertEqual(n1, n5)

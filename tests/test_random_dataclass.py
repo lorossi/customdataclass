@@ -13,8 +13,8 @@ class RandomClass(Dataclass):
     bool_var: bool
 
 
-class TestRandomClass(unittest.TestCase):
-    def _create_random_class(self, max_value=1000, seed=None):
+class TestRandomDataClass(unittest.TestCase):
+    def _instantiateRandomClass(self, max_value=1000, seed=None):
         if seed is not None:
             random.seed(seed)
 
@@ -27,7 +27,7 @@ class TestRandomClass(unittest.TestCase):
 
     def testCreation(self):
         for _ in range(100):
-            s = self._create_random_class()
+            s = self._instantiateRandomClass()
             self.assertIsInstance(s.int_var, int)
             self.assertIsInstance(s.float_var, float)
             self.assertIsInstance(s.str_var, str)
@@ -35,6 +35,6 @@ class TestRandomClass(unittest.TestCase):
 
     def testEquality(self):
         for x in range(100):
-            s1 = self._create_random_class(seed=x * 1000)
-            s2 = self._create_random_class(seed=x * 1000)
+            s1 = self._instantiateRandomClass(seed=x * 1000)
+            s2 = self._instantiateRandomClass(seed=x * 1000)
             self.assertEqual(s1, s2)

@@ -9,13 +9,13 @@ class IncompleteDataclass(Dataclass):
     int_var: int
     float_var: float
     str_var: str
-    bool_var: False
+    bool_var: bool
 
 
-class MutableIncompleteDataclass(Dataclass, frozen=False):
+class MutableIncompleteDataclass(Dataclass, frozen=False, partial=True):
     """Test class."""
 
-    int_var: False
+    int_var = False
 
 
 class TestIncompleteDataclass(unittest.TestCase):
@@ -33,6 +33,7 @@ class TestIncompleteDataclass(unittest.TestCase):
 
     def testTypeChange(self):
         i = MutableIncompleteDataclass()
+        self.assertEqual(i.int_var, False)
         i.int_var = 1
         self.assertEqual(i.int_var, 1)
 
