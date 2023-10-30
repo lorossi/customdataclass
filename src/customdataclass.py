@@ -117,7 +117,7 @@ class Dataclass:
         self._frozen = True
 
     def _checkAttributesValid(self, kwargs: dict) -> bool:
-        """Check if all the attributes are valid (as specified in the class
+        """Check if all the attributes are valid (as specified in the class \
             definition).
 
         Args:
@@ -458,7 +458,7 @@ class Dataclass:
 
     @property
     def __clean_dict__(self) -> dict:
-        """Return a dictionary with all the attributes of the object,
+        """Return a dictionary with all the attributes of the object, \
             except for the ones starting with an underscore (private).
 
         Returns:
@@ -538,6 +538,7 @@ class Dataclass:
     def to_json(self) -> str:
         """
         Return a json representation of the object.
+
         Attributes are recursively converted to json.
 
         Returns:
