@@ -87,3 +87,33 @@ person = Person()
 # access attributes
 print(person.name, person.age)
 ```
+
+## Dataclass with inheritance
+
+```python
+from customdataclass import Dataclass
+
+# define a dataclass with inheritance
+class Person(Dataclass):
+    name: str
+    age: int
+
+    def greet(self) -> str:
+        print(f"Hello, my name is {self.name} and I am {self.age} years old."
+
+# define a dataclass with inheritance
+class Employee(Person):
+    salary: float
+
+    def greetWithSalary(self) -> str:
+        print(f"Hello, my name is {self.name} and I am {self.age} years old. My salary is {self.salary}."
+
+
+# create an instance
+employee = Employee(name="John", age=42, salary=1000.0)
+# access attributes
+print(employee.name, employee.age, employee.salary)
+# call methods
+employee.greet()
+employee.greetWithSalary()
+```
