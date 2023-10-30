@@ -35,11 +35,12 @@ It does work kinda good.
 
 from __future__ import annotations
 
-import json
 import types
+from functools import cached_property
 from typing import Any
 
 import toml
+import ujson
 import yaml
 
 
@@ -72,7 +73,6 @@ class Dataclass:
     _partial: bool = False  # the class can be initialized with missing attributes
     _deserialized: bool = False  # the class is being deserialized
     _serializer: str | None = None  # the serializer used
-    _attributes_dict: dict[str, tuple[type]] | None = None  # cache the attributes
 
     def __init__(self, **kwargs) -&gt; Dataclass:
         &#34;&#34;&#34;Create a new Dataclass.
@@ -82,8 +82,6 @@ class Dataclass:
             AttributeError: an attribute is missing in kwargs.
             TypeError: a value is not of the correct type.
         &#34;&#34;&#34;
-        # initialize the attributes dict
-        self._attributes_dict = None
         # unfreeze the class for the initialisation
         self._frozen = False
 
@@ -147,7 +145,7 @@ class Dataclass:
         self._frozen = True
 
     def _checkAttributesValid(self, kwargs: dict) -&gt; bool:
-        &#34;&#34;&#34;Check if all the attributes are valid (as specified in the class
+        &#34;&#34;&#34;Check if all the attributes are valid (as specified in the class \
             definition).
 
         Args:
@@ -193,7 +191,7 @@ class Dataclass:
         if Any in valid_type:
             return True
         if value is None:
-            return any(t == types.NoneType for t in valid_type)  # noqa: E721
+            return any(t == types.NoneType for t in valid_type)
 
         def check_type(value, type: Any) -&gt; bool:
             # if the type has the __origin__ attribute, it&#39;s a generic type
@@ -464,31 +462,67 @@ class Dataclass:
         &#34;&#34;&#34;
         return iter(self.__clean_dict__.items())
 
-    @property
+    @cached_property
     def __class_attributes__(self) -&gt; dict[str, type]:
         &#34;&#34;&#34;Return all the attributes of the class and their type.
 
         Returns:
             dict
         &#34;&#34;&#34;
-        # cache the result
-        if self._attributes_dict is not None:
-            return self._attributes_dict
+        return self._loadAnnotationsIterative()
 
-        self._attributes_dict = {}
-        for k, v in self.__class__.__annotations__.items():
+    def _loadAnnotationsIterative(
+        self,
+        current: dict[str, type] = None,
+        annotations: dict[str, type] = None,
+        cls: type = None,
+    ) -&gt; dict[str, type]:
+        &#34;&#34;&#34;Load the annotations of the class and its parents.
+
+        Args:
+            current (dict[str, type], optional): current annotations. Defaults to None.
+            annotations (dict[str, type], optional): annotations of the current class. \
+                Defaults to None.
+            cls (type, optional): current class. Defaults to None.
+
+        Returns:
+            dict[str, type]
+        &#34;&#34;&#34;
+        if current is None:
+            current = dict()
+        if annotations is None:
+            annotations = self.__annotations__
+        if cls is None:
+            cls = self.__class__
+
+        current.update(self._extractAnnotations(annotations))
+        for p in cls.__bases__:
+            if issubclass(p, Dataclass) and p is not Dataclass:
+                current = self._loadAnnotationsIterative(current, p.__annotations__, p)
+
+        return current
+
+    def _extractAnnotations(self, annotations: dict[str, type]) -&gt; dict[str, type]:
+        current = dict()
+        for k, v in annotations.items():
+            if isinstance(v, str):
+                continue
+
+            if k in current:
+                continue
+
             if v is Any:
-                self._attributes_dict[k] = (Any,)
+                current[k] = (Any,)
             elif isinstance(v, types.UnionType):
-                self._attributes_dict[k] = tuple(t for t in v.__args__)
+                current[k] = tuple(t for t in v.__args__)
             else:
-                self._attributes_dict[k] = (v,)
+                current[k] = (v,)
 
-        return self._attributes_dict
+        return current
 
     @property
     def __clean_dict__(self) -&gt; dict:
-        &#34;&#34;&#34;Return a dictionary with all the attributes of the object,
+        &#34;&#34;&#34;Return a dictionary with all the attributes of the object, \
             except for the ones starting with an underscore (private).
 
         Returns:
@@ -512,7 +546,7 @@ class Dataclass:
             ImportError: Could not import the correct serializer
         &#34;&#34;&#34;
         libs = {
-            &#34;json&#34;: json,  # could be ujson but json is in the stdlib
+            &#34;json&#34;: ujson,  # could be ujson but json is in the stdlib
             &#34;yaml&#34;: yaml,  # not in the stdlib
             &#34;toml&#34;: toml,  # not in the stdlib
         }
@@ -568,6 +602,7 @@ class Dataclass:
     def to_json(self) -&gt; str:
         &#34;&#34;&#34;
         Return a json representation of the object.
+
         Attributes are recursively converted to json.
 
         Returns:
@@ -751,7 +786,6 @@ initialization. Defaults to False.</p>
     _partial: bool = False  # the class can be initialized with missing attributes
     _deserialized: bool = False  # the class is being deserialized
     _serializer: str | None = None  # the serializer used
-    _attributes_dict: dict[str, tuple[type]] | None = None  # cache the attributes
 
     def __init__(self, **kwargs) -&gt; Dataclass:
         &#34;&#34;&#34;Create a new Dataclass.
@@ -761,8 +795,6 @@ initialization. Defaults to False.</p>
             AttributeError: an attribute is missing in kwargs.
             TypeError: a value is not of the correct type.
         &#34;&#34;&#34;
-        # initialize the attributes dict
-        self._attributes_dict = None
         # unfreeze the class for the initialisation
         self._frozen = False
 
@@ -826,7 +858,7 @@ initialization. Defaults to False.</p>
         self._frozen = True
 
     def _checkAttributesValid(self, kwargs: dict) -&gt; bool:
-        &#34;&#34;&#34;Check if all the attributes are valid (as specified in the class
+        &#34;&#34;&#34;Check if all the attributes are valid (as specified in the class \
             definition).
 
         Args:
@@ -872,7 +904,7 @@ initialization. Defaults to False.</p>
         if Any in valid_type:
             return True
         if value is None:
-            return any(t == types.NoneType for t in valid_type)  # noqa: E721
+            return any(t == types.NoneType for t in valid_type)
 
         def check_type(value, type: Any) -&gt; bool:
             # if the type has the __origin__ attribute, it&#39;s a generic type
@@ -1143,31 +1175,67 @@ initialization. Defaults to False.</p>
         &#34;&#34;&#34;
         return iter(self.__clean_dict__.items())
 
-    @property
+    @cached_property
     def __class_attributes__(self) -&gt; dict[str, type]:
         &#34;&#34;&#34;Return all the attributes of the class and their type.
 
         Returns:
             dict
         &#34;&#34;&#34;
-        # cache the result
-        if self._attributes_dict is not None:
-            return self._attributes_dict
+        return self._loadAnnotationsIterative()
 
-        self._attributes_dict = {}
-        for k, v in self.__class__.__annotations__.items():
+    def _loadAnnotationsIterative(
+        self,
+        current: dict[str, type] = None,
+        annotations: dict[str, type] = None,
+        cls: type = None,
+    ) -&gt; dict[str, type]:
+        &#34;&#34;&#34;Load the annotations of the class and its parents.
+
+        Args:
+            current (dict[str, type], optional): current annotations. Defaults to None.
+            annotations (dict[str, type], optional): annotations of the current class. \
+                Defaults to None.
+            cls (type, optional): current class. Defaults to None.
+
+        Returns:
+            dict[str, type]
+        &#34;&#34;&#34;
+        if current is None:
+            current = dict()
+        if annotations is None:
+            annotations = self.__annotations__
+        if cls is None:
+            cls = self.__class__
+
+        current.update(self._extractAnnotations(annotations))
+        for p in cls.__bases__:
+            if issubclass(p, Dataclass) and p is not Dataclass:
+                current = self._loadAnnotationsIterative(current, p.__annotations__, p)
+
+        return current
+
+    def _extractAnnotations(self, annotations: dict[str, type]) -&gt; dict[str, type]:
+        current = dict()
+        for k, v in annotations.items():
+            if isinstance(v, str):
+                continue
+
+            if k in current:
+                continue
+
             if v is Any:
-                self._attributes_dict[k] = (Any,)
+                current[k] = (Any,)
             elif isinstance(v, types.UnionType):
-                self._attributes_dict[k] = tuple(t for t in v.__args__)
+                current[k] = tuple(t for t in v.__args__)
             else:
-                self._attributes_dict[k] = (v,)
+                current[k] = (v,)
 
-        return self._attributes_dict
+        return current
 
     @property
     def __clean_dict__(self) -&gt; dict:
-        &#34;&#34;&#34;Return a dictionary with all the attributes of the object,
+        &#34;&#34;&#34;Return a dictionary with all the attributes of the object, \
             except for the ones starting with an underscore (private).
 
         Returns:
@@ -1191,7 +1259,7 @@ initialization. Defaults to False.</p>
             ImportError: Could not import the correct serializer
         &#34;&#34;&#34;
         libs = {
-            &#34;json&#34;: json,  # could be ujson but json is in the stdlib
+            &#34;json&#34;: ujson,  # could be ujson but json is in the stdlib
             &#34;yaml&#34;: yaml,  # not in the stdlib
             &#34;toml&#34;: toml,  # not in the stdlib
         }
@@ -1247,6 +1315,7 @@ initialization. Defaults to False.</p>
     def to_json(self) -&gt; str:
         &#34;&#34;&#34;
         Return a json representation of the object.
+
         Attributes are recursively converted to json.
 
         Returns:
