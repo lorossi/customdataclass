@@ -203,14 +203,14 @@ class TestFakeNestedDataclass(unittest.TestCase):
         self.assertEqual(f.list_var, [1, 2, 3])
 
 
-class BaseDataclass(Dataclass):
+class NestedNumberDataclass(Dataclass):
     """Test class."""
 
     int_var: int
     float_var: float
 
 
-class DerivedDataclass(BaseDataclass):
+class NestedStringDataclass(Dataclass):
     """Test class."""
 
     str_var: str
@@ -220,14 +220,14 @@ class DerivedDataclass(BaseDataclass):
 class ContainerDataClass2(Dataclass):
     """Test class."""
 
-    number_dataclass: BaseDataclass
-    string_dataclass: DerivedDataclass
+    number_dataclass: NestedNumberDataclass
+    string_dataclass: NestedStringDataclass
 
 
 class TestNestedDataclass2(unittest.TestCase):
     def _createNestedDataclass(self) -> ContainerDataClass2:
-        s1 = BaseDataclass(int_var=1, float_var=1.0)
-        s2 = DerivedDataclass(str_var="123", list_var=[1, 2, 3])
+        s1 = NestedNumberDataclass(int_var=1, float_var=1.0)
+        s2 = NestedStringDataclass(str_var="123", list_var=[1, 2, 3])
         return ContainerDataClass2(number_dataclass=s1, string_dataclass=s2)
 
     def testCreation(self):
