@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import types
+from functools import cached_property
 from typing import Any
 
 import toml
@@ -42,7 +43,6 @@ class Dataclass:
     _partial: bool = False  # the class can be initialized with missing attributes
     _deserialized: bool = False  # the class is being deserialized
     _serializer: str | None = None  # the serializer used
-    _attributes_dict: dict[str, tuple[type]] | None = None  # cache the attributes
 
     def __init__(self, **kwargs) -> Dataclass:
         """Create a new Dataclass.
@@ -52,8 +52,6 @@ class Dataclass:
             AttributeError: an attribute is missing in kwargs.
             TypeError: a value is not of the correct type.
         """
-        # initialize the attributes dict
-        self._attributes_dict = None
         # unfreeze the class for the initialisation
         self._frozen = False
 
@@ -163,7 +161,7 @@ class Dataclass:
         if Any in valid_type:
             return True
         if value is None:
-            return any(t == types.NoneType for t in valid_type)  # noqa: E721
+            return any(t == types.NoneType for t in valid_type)
 
         def check_type(value, type: Any) -> bool:
             # if the type has the __origin__ attribute, it's a generic type
@@ -434,27 +432,63 @@ class Dataclass:
         """
         return iter(self.__clean_dict__.items())
 
-    @property
+    @cached_property
     def __class_attributes__(self) -> dict[str, type]:
         """Return all the attributes of the class and their type.
 
         Returns:
             dict
         """
-        # cache the result
-        if self._attributes_dict is not None:
-            return self._attributes_dict
+        return self._loadAnnotationsIterative()
 
-        self._attributes_dict = {}
-        for k, v in self.__class__.__annotations__.items():
+    def _loadAnnotationsIterative(
+        self,
+        current: dict[str, type] = None,
+        annotations: dict[str, type] = None,
+        cls: type = None,
+    ) -> dict[str, type]:
+        """Load the annotations of the class and its parents.
+
+        Args:
+            current (dict[str, type], optional): current annotations. Defaults to None.
+            annotations (dict[str, type], optional): annotations of the current class. \
+                Defaults to None.
+            cls (type, optional): current class. Defaults to None.
+
+        Returns:
+            dict[str, type]
+        """
+        if current is None:
+            current = dict()
+        if annotations is None:
+            annotations = self.__annotations__
+        if cls is None:
+            cls = self.__class__
+
+        current.update(self._extractAnnotations(annotations))
+        for p in cls.__bases__:
+            if issubclass(p, Dataclass) and p is not Dataclass:
+                current = self._loadAnnotationsIterative(current, p.__annotations__, p)
+
+        return current
+
+    def _extractAnnotations(self, annotations: dict[str, type]) -> dict[str, type]:
+        current = dict()
+        for k, v in annotations.items():
+            if isinstance(v, str):
+                continue
+
+            if k in current:
+                continue
+
             if v is Any:
-                self._attributes_dict[k] = (Any,)
+                current[k] = (Any,)
             elif isinstance(v, types.UnionType):
-                self._attributes_dict[k] = tuple(t for t in v.__args__)
+                current[k] = tuple(t for t in v.__args__)
             else:
-                self._attributes_dict[k] = (v,)
+                current[k] = (v,)
 
-        return self._attributes_dict
+        return current
 
     @property
     def __clean_dict__(self) -> dict:
