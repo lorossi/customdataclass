@@ -5,12 +5,12 @@ It does work kinda good.
 
 from __future__ import annotations
 
-import json
 import types
 from functools import cached_property
 from typing import Any
 
 import toml
+import ujson
 import yaml
 
 
@@ -516,7 +516,7 @@ class Dataclass:
             ImportError: Could not import the correct serializer
         """
         libs = {
-            "json": json,  # could be ujson but json is in the stdlib
+            "json": ujson,  # could be ujson but json is in the stdlib
             "yaml": yaml,  # not in the stdlib
             "toml": toml,  # not in the stdlib
         }

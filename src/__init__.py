@@ -1,2 +1,2 @@
 __all__ = ["Dataclass"]
-__version__ = "0.1.1.4"
+__version__ = "0.1.2"

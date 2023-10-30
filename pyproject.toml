@@ -4,7 +4,7 @@
 
 [project]
 "name" = "customdataclass"
-"version" = "0.1.1.4"
+"version" = "0.1.2"
 "authors" = [{ name = "Lorenzo Rossi", email = "pypi@lorenzoros.si" }]
 "description" = "A custom dataclass implementation"
 "readme" = "README.md"
@@ -14,7 +14,7 @@
   "Operating System :: OS Independent",
 ]
 "license" = { text = "MIT" }
-"dependencies" = ["PyYAML>=6.0", "toml>=0.10.2"]
+"dependencies" = ["PyYAML>=6.0.1", "toml>=0.10.2", "ujson>=5.8.0"]
 
 [project.urls]
 "Homepage" = "https://github.com/lorossi/customdataclass"
